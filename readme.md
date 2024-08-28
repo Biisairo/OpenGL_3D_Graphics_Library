@@ -52,7 +52,7 @@ Rendering System
 			PBR
 }
 
-shader manager
+// shader manager
 {
 	shader 들을 관리
 	shader 들을 컴파일하여 id 로 들고있는다
@@ -63,7 +63,7 @@ shader manager
 	rendering systemp 에서 특정 인자가 없는 경우 전달을 잘 하도록 맞추기
 }
 
-pipeline manager
+// pipeline manager
 {
 	shader manager 에서 shader id 를 받아서 pipeline 을 만든다
 	만들어진 각각의 pipeline 을 들고있는다
@@ -102,7 +102,7 @@ material, texture manager
 	물체의 material 과 texture 관리...?
 }
 
-mesh
+// mesh
 {
 	mat4x4 model
 	vec3 position
@@ -117,7 +117,7 @@ mesh
 	vector<vec4> color
 }
 
-camera
+// camera
 {
 	mat4x4 model
 	vec3 position
@@ -156,3 +156,13 @@ object
 	parent
 	children
 }
+
+control 은 window 에 종속
+window 는 glfw 의 변수
+glfw 는 opengl library
+window 는 device 내에 있어야함
+device - 외부 class 에 key 별로 연결되는 값 필요
+key 의 경우 enum 으로 변환
+각 key, button 및 콜백의 인자들을 전부 변수화?
+아후 control 에 변수 전달 - contol 이 알아서 처리
+mouse move 는? - delta time 과 offset 값을 저장, 사용할때마다 초기화, 사용안하면 더해짐

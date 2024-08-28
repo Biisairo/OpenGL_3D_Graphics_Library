@@ -1,19 +1,8 @@
 #include "main.hpp"
-#include "Mesh.hpp"
+#include "ProgramManager.hpp"
 
 int main(int ac, char** av) {
-	std::cout << "hello world!" << std::endl;
+	ProgramManager programManager;
 
-	Device device;
-
-	Mesh mesh0(&device);
-	{
-		Mesh mesh3(&device);
-		mesh3.test();
-	}
-	Mesh mesh1(&device);
-	Mesh mesh2(&device);
-	mesh0.test();
-	mesh1.test();
-	mesh2.test();
+	programManager.loadShader(VERTEX_SHADER, "normal", "./src/shader/normal.vs");
 }
