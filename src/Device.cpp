@@ -4,7 +4,7 @@ Device::Device() {}
 
 Device::~Device() {}
 
-void Device::init(std::string const &title) {
+void Device::init() {
 	glfwSetErrorCallback(error_callback);
 
 	if (!glfwInit()) {
@@ -18,30 +18,6 @@ void Device::init(std::string const &title) {
 	#ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	#endif
-
-	// // window 생성 및 callback, user point 저장
-	// {
-	// 	GLFWwindow *window = glfwCreateWindow(this->width, this->height, title.c_str(), NULL, NULL);
-	// 	if (!window) {
-	// 		glfwTerminate();
-	// 		std::cerr << "Fail to make window" << std::endl;
-	// 		return;
-	// 	}
-
-	// 	glfwSetWindowUserPointer(window, this);
-	// 	glfwSetKeyCallback(window, keyCallback);
-	// 	glfwSetMouseButtonCallback(window, mouseCallback);
-	// 	glfwSetScrollCallback(window, scrollCallback); 
-
-	// 	glfwSetInputMode(this->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		
-	// 	glfwMakeContextCurrent(window);
-	// }
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Failed to initialize OpenGL context" << std::endl;
-		return;
-    }
 }
 
 void Device::setting() {
@@ -54,6 +30,60 @@ void Device::setting() {
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+}
+
+void Device::addWindow(std::string const &title, double width, double height) {
+	GLFWwindow *window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
+	if (!window) {
+		glfwTerminate();
+		std::cerr << "Fail to make window" << std::endl;
+		return;
+	}
+
+	WindowInfo windowInfo;
+	windowInfo.title = title;
+	windowInfo.window = window;
+	this->windows.insert(std::make_pair(title, windowInfo));
+
+	glfwSetWindowUserPointer(window, &this->windows[title]);
+	glfwSetKeyCallback(window, key_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	glfwSetCursorPosCallback(window, cursor_pos_callback);
+	glfwSetCursorEnterCallback(window, cursor_enter_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetWindowFocusCallback(window, window_focus_callback);
+	glfwSetWindowPosCallback(window, window_pos_callback);
+	glfwSetWindowSizeCallback(window, window_size_callback);
+	glfwSetWindowCloseCallback(window, window_close_callback);
+	glfwSetWindowMaximizeCallback(window, window_maximize_callback);
+
+	// glfwSetInputMode(this->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	
+	glfwMakeContextCurrent(window);
+
+	static bool isLoadGlad = false;
+
+	if (isLoadGlad == false)
+	{
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+			std::cerr << "Failed to initialize OpenGL context" << std::endl;
+			return;
+		}
+
+		isLoadGlad = true;
+	}
+
+	this->setting();
+
+	glfwMakeContextCurrent(NULL);
+}
+
+void Device::activeWindow(std::string const &title) {
+	if (this->windows.count(title))
+		glfwMakeContextCurrent(this->windows[title].window);
+	else if (title.size() == 0)
+		glfwMakeContextCurrent(NULL);
 }
 
 void Device::updateMesh(
@@ -127,10 +157,6 @@ void Device::deleteCamera(int ID) {
 	
 }
 
-void Device::enqueueUserInput(UserInput userInput) {
-	this->userInput.push(userInput);
-}
-
 
 
 
@@ -142,8 +168,8 @@ void Device::enqueueUserInput(UserInput userInput) {
 // callback function
 // 키보드 입력 콜백
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	Device *device = static_cast<Device*>(glfwGetWindowUserPointer(window));
-	if (!device)
+	WindowInfo* windowInfo = static_cast<WindowInfo*>(glfwGetWindowUserPointer(window));
+	if (!windowInfo)
 		return;
 
 	UserInput userInput;
@@ -512,94 +538,207 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			break;
 	}
 
-	switch (action)
-	{
-	case GLFW_PRESS:
-		userInput.press = true;
-		break;
-	case GLFW_RELEASE:
-		userInput.press = false;
-		break;
+	switch (action) {
+		case GLFW_PRESS:
+			userInput.press = true;
+			break;
+		case GLFW_RELEASE:
+			userInput.press = false;
+			break;
 	}
 
-	device->enqueueUserInput(userInput);
+	windowInfo->userInput.push(userInput);
 }
 
 // 마우스 버튼 콜백
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-	Device *device = static_cast<Device*>(glfwGetWindowUserPointer(window));
-	if (!device)
+	WindowInfo* windowInfo = static_cast<WindowInfo*>(glfwGetWindowUserPointer(window));
+	if (!windowInfo)
 		return;
+
+	UserInput userInput;
+	userInput.userInputType = NONE;
+
+	switch (button) {
+		case GLFW_MOUSE_BUTTON_1:
+			userInput.userInputType = MOUSE_BUTTON_1;
+			break;
+		case GLFW_MOUSE_BUTTON_2:
+			userInput.userInputType = MOUSE_BUTTON_2;
+			break;
+		case GLFW_MOUSE_BUTTON_3:
+			userInput.userInputType = MOUSE_BUTTON_3;
+			break;
+		case GLFW_MOUSE_BUTTON_4:
+			userInput.userInputType = MOUSE_BUTTON_4;
+			break;
+		case GLFW_MOUSE_BUTTON_5:
+			userInput.userInputType = MOUSE_BUTTON_5;
+			break;
+		case GLFW_MOUSE_BUTTON_6:
+			userInput.userInputType = MOUSE_BUTTON_6;
+			break;
+		case GLFW_MOUSE_BUTTON_7:
+			userInput.userInputType = MOUSE_BUTTON_7;
+			break;
+		case GLFW_MOUSE_BUTTON_8:
+			userInput.userInputType = MOUSE_BUTTON_8;
+			break;
+	}
+
+	switch (action) {
+		case GLFW_PRESS:
+			userInput.press = true;
+			break;
+		case GLFW_RELEASE:
+			userInput.press = false;
+			break;
+	}
+
+	windowInfo->userInput.push(userInput);
 }
 
 // 커서 위치 콜백
 static void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
-	Device *device = static_cast<Device*>(glfwGetWindowUserPointer(window));
-	if (!device)
+	WindowInfo* windowInfo = static_cast<WindowInfo*>(glfwGetWindowUserPointer(window));
+	if (!windowInfo)
 		return;
+
+	UserInput userInput;
+	userInput.userInputType = MOUSE_POSITION;
+	userInput.x = xpos;
+	userInput.y = ypos;
+
+	windowInfo->userInput.push(userInput);
 }
 
 // 커서 진입/이탈 콜백
 static void cursor_enter_callback(GLFWwindow* window, int entered) {
-	Device *device = static_cast<Device*>(glfwGetWindowUserPointer(window));
-	if (!device)
+	WindowInfo* windowInfo = static_cast<WindowInfo*>(glfwGetWindowUserPointer(window));
+	if (!windowInfo)
 		return;
+
+	UserInput userInput;
+	userInput.userInputType = NONE;
+
+	switch (entered) {
+		case GLFW_TRUE:
+			userInput.userInputType = MOUSE_ENTER;
+			break;
+		case GLFW_FALSE:
+			userInput.userInputType = MOUSE_EXIT;
+			break;
+	}
+	
+	windowInfo->userInput.push(userInput);
 }
 
 // 스크롤 콜백
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-	Device *device = static_cast<Device*>(glfwGetWindowUserPointer(window));
-	if (!device)
+	WindowInfo* windowInfo = static_cast<WindowInfo*>(glfwGetWindowUserPointer(window));
+	if (!windowInfo)
 		return;
+
+	UserInput userInput;
+	userInput.userInputType = MOUSE_SCROLL;
+	userInput.x = xoffset;
+	userInput.y = yoffset;
+
+	windowInfo->userInput.push(userInput);
 }
 
 // 프레임버퍼 크기 콜백
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-	Device *device = static_cast<Device*>(glfwGetWindowUserPointer(window));
-	if (!device)
+	WindowInfo* windowInfo = static_cast<WindowInfo*>(glfwGetWindowUserPointer(window));
+	if (!windowInfo)
 		return;
+
+	UserInput userInput;
+	userInput.userInputType = FRAME_SIZE;
+	userInput.x = width;
+	userInput.y = height;
+
+	windowInfo->userInput.push(userInput);
 }
 
 // 윈도우 포커스 콜백
 static void window_focus_callback(GLFWwindow* window, int focused) {
-	Device *device = static_cast<Device*>(glfwGetWindowUserPointer(window));
-	if (!device)
+	WindowInfo* windowInfo = static_cast<WindowInfo*>(glfwGetWindowUserPointer(window));
+	if (!windowInfo)
 		return;
+
+	UserInput userInput;
+	userInput.userInputType = NONE;
+
+	switch (focused) {
+		case GLFW_TRUE:
+			userInput.userInputType = WINDOW_FOCUS;
+			break;
+		case GLFW_FALSE:
+			userInput.userInputType = WINDOW_FOCUSOUT;
+			break;
+	}
+
+	windowInfo->userInput.push(userInput);
 }
 
 // 윈도우 위치 콜백
 static void window_pos_callback(GLFWwindow* window, int xpos, int ypos) {
-	Device *device = static_cast<Device*>(glfwGetWindowUserPointer(window));
-	if (!device)
+	WindowInfo* windowInfo = static_cast<WindowInfo*>(glfwGetWindowUserPointer(window));
+	if (!windowInfo)
 		return;
+
+	UserInput userInput;
+	userInput.userInputType = WINDOW_POSITION;
+	userInput.x = xpos;
+	userInput.y = ypos;
+
+	windowInfo->userInput.push(userInput);
 }
 
 // 윈도우 크기 콜백
 static void window_size_callback(GLFWwindow* window, int width, int height) {
-	Device *device = static_cast<Device*>(glfwGetWindowUserPointer(window));
-	if (!device)
+	WindowInfo* windowInfo = static_cast<WindowInfo*>(glfwGetWindowUserPointer(window));
+	if (!windowInfo)
 		return;
+
+	UserInput userInput;
+	userInput.userInputType = WINDOW_SIZE;
+	userInput.x = width;
+	userInput.y = height;
+
+	windowInfo->userInput.push(userInput);
 }
 
 // 윈도우 닫기 콜백
 static void window_close_callback(GLFWwindow* window) {
-	Device *device = static_cast<Device*>(glfwGetWindowUserPointer(window));
-	if (!device)
+	WindowInfo* windowInfo = static_cast<WindowInfo*>(glfwGetWindowUserPointer(window));
+	if (!windowInfo)
 		return;
+
+	UserInput userInput;
+	userInput.userInputType = WINDOW_CLOSE;
+
+	windowInfo->userInput.push(userInput);
 }
 
 // 윈도우 최대화/최소화 콜백
 static void window_maximize_callback(GLFWwindow* window, int maximized) {
-	Device *device = static_cast<Device*>(glfwGetWindowUserPointer(window));
-	if (!device)
+	WindowInfo* windowInfo = static_cast<WindowInfo*>(glfwGetWindowUserPointer(window));
+	if (!windowInfo)
 		return;
+
+	UserInput userInput;
+	userInput.userInputType = WINDOW_MAXIMIZE;
+
+	windowInfo->userInput.push(userInput);
 }
 
 // // 모니터 콜백
 // static void monitor_callback(GLFWmonitor* monitor, int event) {
-// 	Device *device = static_cast<Device*>(glfwGetWindowUserPointer(window));
-// 	if (!device)
-// 		return;
+// 	std::queue<UserInput> *userInput = static_cast<std::queue<UserInput>*>(glfwGetWindowUserPointer(window));
+// 	if (!/inputQueue/ 	std::queue<UserInput> *userInput = static_cast<std::queue<UserInput>*>(glfwGetWindowUserPointer(window));)
+// 		queue;
 // }
 
 // error message

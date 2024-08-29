@@ -10,18 +10,27 @@ struct MeshObject {
 	std::vector<GLuint> VBOs;
 };
 
+struct WindowInfo {
+	std::string title;
+	GLFWwindow* window;
+	std::queue<UserInput> userInput;
+};
+
 class Device {
 	private:
-		std::map<uint, MeshObject> mesh_objects;
+		std::map<std::string, WindowInfo> windows;
 
-		std::queue<UserInput> userInput;
+		std::map<uint, MeshObject> mesh_objects;
 
 	public:
 		Device();
 		~Device();
 
-		void init(std::string const &title);
+		void init();
 		void setting();
+
+		void addWindow(std::string const &title, double width, double height);
+		void activeWindow(std::string const &title);
 
 		void updateMesh(
 			int ID,
@@ -35,8 +44,6 @@ class Device {
 		void updateCamera(int ID);
 
 		void deleteCamera(int ID);
-
-		void enqueueUserInput(UserInput userInput);
 };
 
 // callback function
@@ -53,5 +60,19 @@ static void window_close_callback(GLFWwindow* window);
 static void window_maximize_callback(GLFWwindow* window, int maximized);
 static void monitor_callback(GLFWmonitor* monitor, int event);
 static void error_callback(int error, const char *des);
-
+/*
+void glfwSetKeyCallback(GLFWwindow* window, GLFWkeyfun callback);
+void glfwSetMouseButtonCallback(GLFWwindow* window, GLFWmousebuttonfun callback);
+void glfwSetCursorPosCallback(GLFWwindow* window, GLFWcursorposfun callback);
+void glfwSetCursorEnterCallback(GLFWwindow* window, GLFWcursorenterfun callback);
+void glfwSetScrollCallback(GLFWwindow* window, GLFWscrollfun callback);
+void glfwSetFramebufferSizeCallback(GLFWwindow* window, GLFWframebuffersizefun callback);
+void glfwSetWindowFocusCallback(GLFWwindow* window, GLFWwindowfocusfun callback);
+void glfwSetWindowPosCallback(GLFWwindow* window, GLFWwindowposfun callback);
+void glfwSetWindowSizeCallback(GLFWwindow* window, GLFWwindowsizefun callback);
+void glfwSetWindowCloseCallback(GLFWwindow* window, GLFWwindowclosefun callback);
+void glfwSetWindowMaximizeCallback(GLFWwindow* window, GLFWwindowmaximizefun callback);
+void glfwSetMonitorCallback(GLFWmonitorfun callback);
+void glfwSetErrorCallback(GLFWerrorfun callback);
+*/
 #endif

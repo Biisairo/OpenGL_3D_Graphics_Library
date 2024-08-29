@@ -1,8 +1,15 @@
 #include "main.hpp"
-#include "ProgramManager.hpp"
+#include "Device.hpp"
 
 int main(int ac, char** av) {
-	ProgramManager programManager;
-
-	programManager.loadShader(VERTEX_SHADER, "normal", "./src/shader/normal.vs");
+	Device device;
+	device.init();
+	device.addWindow("test", 500, 500);
+	std::cout << "test" << std::endl;
+	device.activeWindow("test");
+	device.addWindow("test2", 500, 500);
+	while (1)
+	{
+		glfwPollEvents();
+	}
 }
