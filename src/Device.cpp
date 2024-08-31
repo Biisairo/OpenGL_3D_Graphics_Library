@@ -88,9 +88,13 @@ void Device::activeWindow(std::string const &title) {
 
 void Device::updateMesh(
 		int ID,
-		std::vector<glm::vec3>& vertex,
-		std::vector<glm::vec3>& normal,
-		std::vector<glm::vec2>& UV
+		std::vector<glm::vec3> position,
+		std::vector<glm::vec3> normal,
+		std::vector<glm::vec2> texCoords,
+		std::vector<glm::vec3> tangent,
+		std::vector<glm::vec3> bitangent,
+		std::vector<glm::vec4> colors,
+		std::vector<uint> index
 	) {
 	// if (this->vertex.size() == 0)
 	// 	return;
