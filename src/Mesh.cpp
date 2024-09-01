@@ -69,7 +69,7 @@ void Mesh::setVertexData() {
 		this->makeTangentSpace();
 	}
 
-	if (this->position.size() != this->colors.size()) {
+	if (this->position.size() != this->colors.size() && this->colors.size() == 1) {
 		glm::vec4 color;
 		if (this->colors.size() == 0)
 			color = glm::vec4(1, 1, 1, 1);
