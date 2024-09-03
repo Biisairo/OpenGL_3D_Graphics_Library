@@ -1,7 +1,7 @@
 #include "IResourceID.hpp"
 
-std::queue<unsigned int> IResourceID::IDPool;
-unsigned int IResourceID::nextID = 0;
+std::queue<uint> IResourceID::IDPool;
+uint IResourceID::nextID = 0;
 
 IResourceID::IResourceID() {
 	this->setID();
@@ -19,11 +19,11 @@ IResourceID& IResourceID::operator=(const IResourceID&) {
 	return *this;
 }
 
-unsigned int IResourceID::getID() {
+uint IResourceID::getID() {
 	return this->ID;
 }
 
-unsigned int IResourceID::setID() {
+uint IResourceID::setID() {
 	if (this->IDPool.size() > 0) {
 		this->ID = this->IDPool.front();
 		this->IDPool.pop();

@@ -1,37 +1,21 @@
 #version 430 core
 
+uniform bool UseNormal;
+uniform bool UseTexture;
+
 uniform mat4 MODEL;
 
-layout (std140binding = 0) uniform Matrices
+layout (std140, binding = 0) uniform Matrices
 {
     mat4 PROJECTION;
     mat4 VIEW;
 	vec3 VIEWPOS;
 };
 
-struct Light {
-    uint emitType;
-	// 0 directional light
-	// 1 point light
-	// 2 spot light
-
-    vec3 position;
-    vec3 color;
-
-	float ambientStrength;
-    float diffuseStrength;
-    float specularStrength;
-
-	// only for emitType 2, spotlight
-	vec3 emitDirection;
-	float innerCutoff;
-    float outerCutoff;
-};
-
-layout (std430, binding = 0) uniform Lights
+layout (std430, binding = 1) uniform Lights
 {
 	uint LIGHT_COUNT;
-	Light LIGHTPOS[];
+	Light LIGHT[];
 };
 
 layout (location = 0) in vec3 aPos;
@@ -41,9 +25,46 @@ layout (location = 3) in vec3 aTangent;
 layout (location = 4) in vec3 aBitangent;
 layout (location = 5) in vec3 aColor;
 
-out Camera_VNT_VS_OUT vs_out;
+out Camera_VS_OUT vs_out;
 
 void main(){
+    if (UseNormal && UseTexture)
+        CAMERA_VNT();
+    else if (UseNormal)
+        CAMERA_VN();
+    else if (UseTexture)
+        CAMERA_VT();
+    else
+        CAMERA_V();
+}
+
+void CAMERA_V() {
+    vs_out.VertexColor = aColor;
+    
+	gl_Position = PROJECTION * VIEW * MODEL * vec4(aPos, 1.0);
+}
+
+void CAMERA_VT() {
+	vs_out.VertexColor = aColor;
+	vs_out.TexCoord = aTexCoords;
+
+	gl_Position = PROJECTION * VIEW * MODEL * vec4(aPos, 1.0);
+}
+
+void CAMERA_VN() {
+	vs_out.VertexColor = aColor;
+	
+	vs_out.FragPos = vec3(MODEL * vec4(aPos, 1.0));   
+
+	mat3 normalMatrix = transpose(inverse(mat3(MODEL)));
+
+	vec3 N = normalize(normalMatrix * aNormal);
+	vs_out.Normal = N;
+
+	gl_Position = PROJECTION * VIEW * MODEL * vec4(aPos, 1.0);
+}
+
+void CAMERA_VNT() {
     vs_out.VertexColor = aColor;
 
     vs_out.FragPos = vec3(MODEL * vec4(aPos, 1.0));   

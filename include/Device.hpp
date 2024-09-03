@@ -5,6 +5,13 @@
 
 #include "UserInput.hpp"
 
+enum RenderType {
+	CAMERA_V,
+	CAMERA_VT,
+	CAMERA_VN,
+	CAMERA_VNT,
+};
+
 struct WindowInfo {
 	std::string title;
 	GLFWwindow* window;
@@ -13,7 +20,10 @@ struct WindowInfo {
 
 struct MeshObject {
 	GLuint VAO;
-	std::vector<GLuint> VBOs;
+	GLuint VBO;
+	GLuint EBO;
+	uint indexCount;
+	RenderType renderType;
 };
 
 class Device {
@@ -34,7 +44,7 @@ class Device {
 		void activeWindow(std::string const &title);
 
 		void updateMesh(
-			int ID,
+			uint ID,
 			std::vector<glm::vec3> position,
 			std::vector<glm::vec3> normal,
 			std::vector<glm::vec2> texCoords,
@@ -43,12 +53,12 @@ class Device {
 			std::vector<glm::vec4> colors,
 			std::vector<uint> index
 		);
+		void deleteMesh(uint ID);
+		void drawMesh(uint ID);
 
-		void deleteMesh(int ID);
+		void updateCamera(uint ID);
 
-		void updateCamera(int ID);
-
-		void deleteCamera(int ID);
+		void deleteCamera(uint ID);
 };
 
 // callback function

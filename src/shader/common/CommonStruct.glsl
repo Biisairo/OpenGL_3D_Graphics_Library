@@ -1,27 +1,15 @@
 #ifndef COMMON_STRUCT_GLSL
 #define COMMON_STRUCT_GLSL
 
-struct Camera_V_VS_OUT {
-    vec4 VertexColor;
-};
-
-struct Camera_VT_VS_OUT {
-	vec2 TexCoord;
-    vec4 VertexColor;
-};
-
-struct Camera_VN_VS_OUT {
-    vec3 FragPos;
-	vec3 Normal;
+struct Camera_VS_OUT {
 	vec4 VertexColor;
-};
 
-struct Camera_VNT_VS_OUT {
     vec3 FragPos;
 	vec3 Normal;
+
     vec2 TexCoords;
+
     mat4 TBN;
-	vec4 VertexColor;
 };
 
 struct Light {

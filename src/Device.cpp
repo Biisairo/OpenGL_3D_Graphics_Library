@@ -13,7 +13,7 @@ void Device::init() {
 	}
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	#ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -87,77 +87,138 @@ void Device::activeWindow(std::string const &title) {
 }
 
 void Device::updateMesh(
-		int ID,
+		uint ID,
 		std::vector<glm::vec3> position,
 		std::vector<glm::vec3> normal,
 		std::vector<glm::vec2> texCoords,
 		std::vector<glm::vec3> tangent,
 		std::vector<glm::vec3> bitangent,
 		std::vector<glm::vec4> colors,
-		std::vector<uint> index
+		std::vector<GLuint> index
 	) {
-	// if (this->vertex.size() == 0)
-	// 	return;
-	// glGenVertexArrays(1, &this->VAO);
-	// glGenBuffers(1, &this->VBO);
+	GLuint VAO;
+	GLuint VBO;
+	GLuint EBO;
 
-	// // std::cout << "Object VAO : " << this->VAO << " , " << "VBO : " << this->VBO << std::endl;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
 
-	// glBindVertexArray(this->VAO);
-	// glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	glBindVertexArray(VAO);
 
-	// glBufferData(GL_ARRAY_BUFFER,
-	// 			this->vertex.size() * sizeof(glm::vec3) + this->normal.size() * sizeof(glm::vec3) + this->texture.size() * sizeof(glm::vec2),
-	// 			0,
-	// 			GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	GLsizeiptr bufferSize = 0;
+	bufferSize += position.size() * sizeof(glm::vec3);
+	bufferSize += normal.size() * sizeof(glm::vec3);
+	bufferSize += texCoords.size() * sizeof(glm::vec2);
+	bufferSize += tangent.size() * sizeof(glm::vec3);
+	bufferSize += bitangent.size() * sizeof(glm::vec3);
+	bufferSize += colors.size() * sizeof(glm::vec4);
+	glBufferData(GL_ARRAY_BUFFER, bufferSize, NULL, GL_STATIC_DRAW);  
 
-	// glBufferSubData(GL_ARRAY_BUFFER, 0, this->vertex.size() * sizeof(glm::vec3), this->vertex.data());
-	// glEnableVertexAttribArray(0);
-	// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
 
-	// if (this->normal.size() != 0) {
-	// 	glBufferSubData(GL_ARRAY_BUFFER,
-	// 					this->vertex.size() * sizeof(glm::vec3),
-	// 					this->normal.size() * sizeof(glm::vec3),
-	// 					this->normal.data());
-	// 	glEnableVertexAttribArray(1);
-	// 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-	// 						sizeof(glm::vec3),
-	// 						(void*)(this->vertex.size() * sizeof(glm::vec3)));
-	// }
+	GLintptr offsetSize = 0;
+	{
+		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, position.size() * sizeof(glm::vec3), position.data());
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)offsetSize);
+		
+		offsetSize += position.size() * sizeof(glm::vec3);
+	}
 
-	// if (this->normal.size() == 0 && this->texture.size() != 0) {
-	// 	glBufferSubData(GL_ARRAY_BUFFER,
-	// 					this->vertex.size() * sizeof(glm::vec3),
-	// 					this->texture.size() * sizeof(glm::vec2),
-	// 					this->texture.data());
-	// 	glEnableVertexAttribArray(1);
-	// 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
-	// 						sizeof(glm::vec2),
-	// 						(void*)(this->vertex.size() * sizeof(glm::vec3)));
-	// } else if (this->normal.size() != 0 && this->texture.size() != 0) {
-	// 	glBufferSubData(GL_ARRAY_BUFFER,
-	// 					this->vertex.size() * sizeof(glm::vec3) + this->normal.size() * sizeof(glm::vec3),
-	// 					this->texture.size() * sizeof(glm::vec2),
-	// 					this->texture.data());
-	// 	glEnableVertexAttribArray(2);
-	// 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
-	// 						sizeof(glm::vec2),
-	// 						(void*)(this->vertex.size() * sizeof(glm::vec3) + this->normal.size() * sizeof(glm::vec3)));
-	// }
-	// glBindVertexArray(0);
+	if (normal.size())
+	{
+		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, normal.size() * sizeof(glm::vec3), normal.data());
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)offsetSize);
+		
+		offsetSize += normal.size() * sizeof(glm::vec3);
+	}
 
+	if (texCoords.size())
+	{
+		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, texCoords.size() * sizeof(glm::vec2), texCoords.data());
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)offsetSize);
+
+		offsetSize += texCoords.size() * sizeof(glm::vec2);
+	}
+
+	if (tangent.size())
+	{
+		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, tangent.size() * sizeof(glm::vec3), tangent.data());
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)offsetSize);
+
+		offsetSize += tangent.size() * sizeof(glm::vec3);
+	}
+
+	if (bitangent.size())
+	{
+		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, bitangent.size() * sizeof(glm::vec3), bitangent.data());
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)offsetSize);
+
+		offsetSize += bitangent.size() * sizeof(glm::vec3);
+	}
+
+	if (colors.size())
+	{
+		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, colors.size() * sizeof(glm::vec4), colors.data());
+		glEnableVertexAttribArray(5);
+		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)offsetSize);
+
+		offsetSize += colors.size() * sizeof(glm::vec4);
+	}
+
+	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, index.size() * sizeof(GLuint), index.data(), GL_STATIC_DRAW);
+
+	glBindVertexArray(0);
+
+	MeshObject meshObject;
+	meshObject.VAO = VAO;
+	meshObject.VBO = VBO;
+	meshObject.EBO = EBO;
+	meshObject.indexCount = index.size();
+
+	if (normal.size() && texCoords.size()) {
+		meshObject.renderType = CAMERA_VNT;
+	} else if (normal.size()) {
+		meshObject.renderType = CAMERA_VN;
+	} else if (texCoords.size()) {
+		meshObject.renderType = CAMERA_VT;
+	} else {
+		meshObject.renderType = CAMERA_V;
+	}
+
+	this->mesh_objects.insert(std::make_pair(ID, meshObject));
 }
 
-void Device::deleteMesh(int ID) {
-	// delete action
+void Device::deleteMesh(uint ID) {
+	if (this->mesh_objects.count(ID)) {
+		glDeleteBuffers(1, &(this->mesh_objects[ID].EBO));
+		glDeleteBuffers(1, &(this->mesh_objects[ID].VBO));
+		glDeleteVertexArrays(1, &(this->mesh_objects[ID].VAO));
+
+		this->mesh_objects.erase(ID);
+	}
 }
 
-void Device::updateCamera(int ID) {
+void Device::drawMesh(uint ID) {
+	if (this->mesh_objects.count(ID)) {
+		glBindVertexArray(this->mesh_objects[ID].VAO);
+		glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(this->mesh_objects[ID].indexCount), GL_UNSIGNED_INT, NULL);
+		glBindVertexArray(0);
+	}
+}
+
+void Device::updateCamera(uint ID) {
 	
 }
 
-void Device::deleteCamera(int ID) {
+void Device::deleteCamera(uint ID) {
 	
 }
 

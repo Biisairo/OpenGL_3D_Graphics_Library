@@ -51,7 +51,7 @@ void Mesh::setColors (glm::vec4 &color) {
 	this->colors.push_back(color);
 }
 
-void Mesh::setIndex (std::vector<uint> &index) {
+void Mesh::setIndex (std::vector<GLuint> &index) {
 	this->index = index;
 }
 

@@ -41,7 +41,7 @@ vec2 steepParallaxMapping(vec2 texCoords, vec3 viewDir, sampler2D depthMap, floa
     float layerDepth = 1.0 / layer;
     float currentLayerDepth = 0.0;
 
-    vec2 p = viewDir.xy * height_scale;
+    vec2 p = viewDir.xy * heightScale;
     vec2 deltaTexCoords = p / layer;
 
     vec2  currentTexCoords = texCoords;
@@ -66,7 +66,7 @@ vec2 parallaxOcclusionMapping(vec2 texCoords, vec3 viewDir, sampler2D depthMap, 
     float layerDepth = 1.0 / layer;
     float currentLayerDepth = 0.0;
 
-    vec2 p = viewDir.xy * height_scale;
+    vec2 p = viewDir.xy * heightScale;
     vec2 deltaTexCoords = p / layer;
 
     vec2  currentTexCoords = texCoords;

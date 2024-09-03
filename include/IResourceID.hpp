@@ -1,13 +1,14 @@
 #ifndef IRESOURCEID
 #define IRESOURCEID
 
+#include "pch.hpp"
 #include <queue>
 
 class IResourceID {
 	private:
-		static std::queue<unsigned int> IDPool;
-		static unsigned int nextID;
-		unsigned int ID;
+		static std::queue<uint> IDPool;
+		static uint nextID;
+		uint ID;
 	
 	public:
 		IResourceID();
@@ -15,10 +16,10 @@ class IResourceID {
 		IResourceID(const IResourceID&);
     	IResourceID& operator=(const IResourceID&);
 
-		unsigned int getID();
+		uint getID();
 
 	private:
-		unsigned int setID();
+		uint setID();
 };
 
 #endif

@@ -42,7 +42,7 @@ class Mesh : private IResourceID {
 		std::vector<glm::vec3> tangent;
 		std::vector<glm::vec3> bitangent;
 		std::vector<glm::vec4> colors;
-		std::vector<uint> index;
+		std::vector<GLuint> index;
 
 	public:
 		Mesh(Device* device, Mesh *parent = nullptr);
@@ -60,7 +60,7 @@ class Mesh : private IResourceID {
 		void setBitangent (std::vector<glm::vec3> &bitangent);
 		void setColors (std::vector<glm::vec4> &colors);
 		void setColors (glm::vec4 &color);
-		void setIndex (std::vector<uint> &index);
+		void setIndex (std::vector<GLuint> &index);
 		void setVertexData();
 
 		void modelInit();
