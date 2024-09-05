@@ -1,10 +1,5 @@
 #version 430 core
 
-#include <common/CommonStruct.glsl>
-
-// USE_NORMAL
-// USE_TEXCOORD
-
 uniform mat4 MODEL;
 
 layout (std140, binding = 0) uniform Matrices
@@ -24,18 +19,18 @@ layout (location = 5) in vec3 aColor;
 out Camera_VS_OUT vs_out;
 
 void main(){
-    #if defined(USE_NORMAL) && defined(USE_TEXCOORD)
+    #if defined(USE_NORMAL) && defined(USE_TEXTURE)
         CAMERA_VNT();
     #elif defined(USE_NORMAL)
         CAMERA_VN();
-    #elif defined(USE_TEXCOORD)
+    #elif defined(USE_TEXTURE)
         CAMERA_VT();
     #else
         CAMERA_V();
     #endif
 }
 
-#if defined(USE_NORMAL) && defined(USE_TEXCOORD)
+#if defined(USE_NORMAL) && defined(USE_TEXTURE)
 void CAMERA_VNT() {
     vs_out.VertexColor = aColor;
 
@@ -71,7 +66,7 @@ void CAMERA_VN() {
 
 	gl_Position = PROJECTION * VIEW * MODEL * vec4(aPos, 1.0);
 }
-#elif defined(USE_TEXCOORD)
+#elif defined(USE_TEXTURE)
 void CAMERA_VT() {
 	vs_out.VertexColor = aColor;
 	vs_out.TexCoord = aTexCoords;

@@ -3,14 +3,8 @@
 
 #include "pch.hpp"
 
+#include "ProgramManager.hpp"
 #include "UserInput.hpp"
-
-enum RenderType {
-	CAMERA_V,
-	CAMERA_VT,
-	CAMERA_VN,
-	CAMERA_VNT,
-};
 
 struct WindowInfo {
 	std::string title;
@@ -23,11 +17,12 @@ struct MeshObject {
 	GLuint VBO;
 	GLuint EBO;
 	uint indexCount;
-	RenderType renderType;
+	size_t program;
 };
 
 class Device {
 	private:
+		ProgramManager programManager;
 
 		std::map<std::string, WindowInfo> windows;
 
@@ -53,6 +48,7 @@ class Device {
 			std::vector<glm::vec4> colors,
 			std::vector<uint> index
 		);
+		// void updateMesh(texture);
 		void deleteMesh(uint ID);
 		void drawMesh(uint ID);
 

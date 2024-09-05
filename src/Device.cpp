@@ -177,21 +177,26 @@ void Device::updateMesh(
 
 	glBindVertexArray(0);
 
+	std::unordered_map<ShaderType, std::string> shader;
+	shader.insert(std::make_pair(VERTEX_SHADER, COMMON_SHADER_VERT));
+	shader.insert(std::make_pair(FRAGMENT_SHADER, COMMON_SHADER_FRAG));
+
+	std::set<std::string> define;
+	if (normal.size())
+		define.insert("USE_NORMAL");
+	if (texCoords.size())
+		define.insert("USE_TEXCOORD");
+
+	size_t program = this->programManager.getHash(shader, define);
+	if (this->programManager.getID(program) == 0)
+		this->programManager.loadProgram(shader, define);
+
 	MeshObject meshObject;
 	meshObject.VAO = VAO;
 	meshObject.VBO = VBO;
 	meshObject.EBO = EBO;
 	meshObject.indexCount = index.size();
-
-	if (normal.size() && texCoords.size()) {
-		meshObject.renderType = CAMERA_VNT;
-	} else if (normal.size()) {
-		meshObject.renderType = CAMERA_VN;
-	} else if (texCoords.size()) {
-		meshObject.renderType = CAMERA_VT;
-	} else {
-		meshObject.renderType = CAMERA_V;
-	}
+	meshObject.program = program;
 
 	this->mesh_objects.insert(std::make_pair(ID, meshObject));
 }

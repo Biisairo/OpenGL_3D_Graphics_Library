@@ -1,38 +1,20 @@
 #include "ProgramManager.hpp"
 
 ProgramManager::ProgramManager() {
-	for (int i = VERTEX_SHADER; i <= COMPUTE_SHADER; i++)
-		shader[static_cast<ShaderType>(i)] = std::map<std::string, GLuint>();
 }
 
 ProgramManager::~ProgramManager() {
-	for (int i = VERTEX_SHADER; i <= COMPUTE_SHADER; i++) {
-		for (std::map<std::string, GLuint>::iterator it = this->shader[static_cast<ShaderType>(i)].begin();
-			it != this->shader[static_cast<ShaderType>(i)].end(); it++) {
-			glDeleteShader(it->second);
-		}
-	}
-
-	for (std::map<std::string, GLuint>::iterator it = this->program.begin();
-		it != this->program.end(); it++) {
+	for (std::unordered_map<size_t, GLuint>::iterator it = this->program.begin(); it != this->program.end(); it++) {
 		glDeleteProgram(it->second);
 	}
 }
 
-bool ProgramManager::loadShader(ShaderType shaderType, std::string const &shaderName, std::string const &filename) {
-	std::fstream file;
-	file.open(filename);
-	if (!file.is_open()) {
-		std::cerr << filename << " not open" << std::endl;
-		return false;
+GLuint ProgramManager::loadShader(ShaderType shaderType, std::string const &fileName, std::set<std::string> &define) {
+	std::string shaderCode = "";
+	for (std::set<std::string>::iterator it = define.begin(); it != define.end(); it++) {
+		shaderCode += "#define " + *it + "\n";
 	}
-	std::string str;
-	file.seekg(0,std::ios::end);
-	size_t size = file.tellg();
-	str.resize(size);
-	file.seekg(0, std::ios::beg);
-	file.read(&str[0], size);
-	file.close();
+	shaderCode += loadShaderCode(fileName);
 
 	GLenum type;
 	switch (shaderType)
@@ -58,8 +40,8 @@ bool ProgramManager::loadShader(ShaderType shaderType, std::string const &shader
 	}
 
 	GLuint id = glCreateShader(type);
-	const GLchar *source = str.c_str();
-	const GLint length = str.length();
+	const GLchar *source = shaderCode.c_str();
+	const GLint length = shaderCode.length();
 	glShaderSource(id, 1, &source, &length);
 
 	glCompileShader(id);
@@ -68,57 +50,31 @@ bool ProgramManager::loadShader(ShaderType shaderType, std::string const &shader
 	glGetShaderiv(id, GL_COMPILE_STATUS, &check);
 	if (check == GL_FALSE) {
 		glDeleteShader(id);
-		std::cerr << filename << " not compiled" << std::endl;
-		return false;
+		std::cerr << fileName << " not compiled" << std::endl;
+		return 0;
 	};
 
-	this->shader[shaderType].insert(std::make_pair(shaderName, id));
-	return true;
+	return id;
 }
 
-void ProgramManager::deleteShader(ShaderType shaderType, std::string const &shaderName) {
-	glDeleteShader(this->shader[shaderType][shaderName]);
-	this->shader[shaderType].erase(shaderName);
-}
-
-bool ProgramManager::loadProgram(
-	std::string const &programName,
-	std::string const &vertexShader,
-	std::string const &tessControlShader,
-	std::string const &tessEvaluationShader,
-	std::string const &geometryShader,
-	std::string const &fragmentShader,
-	std::string const &computeShader
+size_t ProgramManager::loadProgram(
+	std::unordered_map<ShaderType, std::string> &shader,
+	std::set<std::string> &define
 ) {
 	GLuint id = glCreateProgram();
 
-	if (this->shader[VERTEX_SHADER].count(vertexShader))
-			glAttachShader(id, this->shader[VERTEX_SHADER][vertexShader]);
-	if (this->shader[TESS_CONTROL_SHADER].count(vertexShader))
-			glAttachShader(id, this->shader[TESS_CONTROL_SHADER][vertexShader]);
-	if (this->shader[TESS_EVALUATION_SHADER].count(vertexShader))
-			glAttachShader(id, this->shader[TESS_EVALUATION_SHADER][vertexShader]);
-	if (this->shader[GEOMETRY_SHADER].count(vertexShader))
-			glAttachShader(id, this->shader[GEOMETRY_SHADER][vertexShader]);
-	if (this->shader[FRAGMENT_SHADER].count(vertexShader))
-			glAttachShader(id, this->shader[FRAGMENT_SHADER][vertexShader]);
-	if (this->shader[COMPUTE_SHADER].count(vertexShader))
-			glAttachShader(id, this->shader[COMPUTE_SHADER][vertexShader]);
+	std::vector<GLuint> shaderID;
+	for (std::unordered_map<ShaderType, std::string>::iterator it = shader.begin(); it != shader.end(); it++) {
+		GLuint shader = this->loadShader(it->first, it->second, define);
+			glAttachShader(id, shader);
+	}
 
 	glLinkProgram(id);
 
-	if (this->shader[VERTEX_SHADER].count(vertexShader))
-			glDetachShader(id, this->shader[VERTEX_SHADER][vertexShader]);
-	if (this->shader[TESS_CONTROL_SHADER].count(vertexShader))
-			glDetachShader(id, this->shader[TESS_CONTROL_SHADER][vertexShader]);
-	if (this->shader[TESS_EVALUATION_SHADER].count(vertexShader))
-			glDetachShader(id, this->shader[TESS_EVALUATION_SHADER][vertexShader]);
-	if (this->shader[GEOMETRY_SHADER].count(vertexShader))
-			glDetachShader(id, this->shader[GEOMETRY_SHADER][vertexShader]);
-	if (this->shader[FRAGMENT_SHADER].count(vertexShader))
-			glDetachShader(id, this->shader[FRAGMENT_SHADER][vertexShader]);
-	if (this->shader[COMPUTE_SHADER].count(vertexShader))
-			glDetachShader(id, this->shader[COMPUTE_SHADER][vertexShader]);
+	for (int i = 0; i < shaderID.size(); i++) {
+		glDetachShader(id, shaderID[i]);
+		glDeleteShader(shaderID[i]);
+	}
 
 	// check link done
 	GLint check;
@@ -126,66 +82,88 @@ bool ProgramManager::loadProgram(
 	if (check == GL_FALSE) {
 		glDeleteProgram(id);
 		std::cerr << "Program does not linked" << std::endl;
-		return false;
+		return 0;
 	}
 
-	this->program[programName] = id;
+	size_t hashCode = getHash(shader, define);
+	this->program[hashCode] = id;
 
-	return true;
-}
-
-void ProgramManager::setBool(std::string const &programName, std::string const &name, bool value) {         
-	if (this->program.count(programName))
-	glUniform1i(glGetUniformLocation(this->program[programName], name.c_str()), (int)value); 
-}
-void ProgramManager::setInt(std::string const &programName, std::string const &name, int value) { 
-	if (this->program.count(programName))
-	glUniform1i(glGetUniformLocation(this->program[programName], name.c_str()), value); 
-}
-void ProgramManager::setFloat(std::string const &programName, std::string const &name, float value) { 
-	if (this->program.count(programName))
-	glUniform1f(glGetUniformLocation(this->program[programName], name.c_str()), value); 
-}
-void ProgramManager::setVec2(std::string const &programName, std::string const &name, glm::vec2 value) { 
-	if (this->program.count(programName))
-	glUniform2fv(glGetUniformLocation(this->program[programName], name.c_str()), 1, &value[0]); 
-}
-void ProgramManager::setVec2(std::string const &programName, std::string const &name, float x, float y) { 
-	if (this->program.count(programName))
-	glUniform2f(glGetUniformLocation(this->program[programName], name.c_str()), x, y); 
-}
-void ProgramManager::setVec3(std::string const &programName, std::string const &name, glm::vec3 value) { 
-	if (this->program.count(programName))
-	glUniform3fv(glGetUniformLocation(this->program[programName], name.c_str()), 1, &value[0]); 
-}
-void ProgramManager::setVec3(std::string const &programName, std::string const &name, float x, float y, float z) { 
-	if (this->program.count(programName))
-	glUniform3f(glGetUniformLocation(this->program[programName], name.c_str()), x, y, z); 
-}
-void ProgramManager::setVec4(std::string const &programName, std::string const &name, glm::vec4 value) { 
-	if (this->program.count(programName))
-	glUniform4fv(glGetUniformLocation(this->program[programName], name.c_str()), 1, &value[0]); 
-}
-void ProgramManager::setVec4(std::string const &programName, std::string const &name, float x, float y, float z, float w)  { 
-	if (this->program.count(programName))
-	glUniform4f(glGetUniformLocation(this->program[programName], name.c_str()), x, y, z, w); 
-}
-void ProgramManager::setMat3(std::string const &programName, std::string const &name, glm::mat3 &mat) {
-	if (this->program.count(programName))
-	glUniformMatrix3fv(glGetUniformLocation(this->program[programName], name.c_str()), 1, GL_FALSE, &mat[0][0]);
-}
-void ProgramManager::setMat4(std::string const &programName, std::string const &name, glm::mat4 &mat) {
-	if (this->program.count(programName))
-	glUniformMatrix4fv(glGetUniformLocation(this->program[programName], name.c_str()), 1, GL_FALSE, &mat[0][0]);
+	return hashCode;
 }
 
-void ProgramManager::useProgram(std::string const &programName) {
-	if (this->program.count(programName))
-	glUseProgram(this->program[programName]);
+size_t getHash(
+	std::unordered_map<ShaderType, std::string> &shader,
+	std::set<std::string> &define
+) {
+	std::string programHashKey = "";
+	for (int i = VERTEX_SHADER; i <= COMPUTE_SHADER; i++) {
+		if (i != VERTEX_SHADER)
+			programHashKey += "_";
+		if (shader.count(static_cast<ShaderType>(i)))
+			programHashKey += shader[static_cast<ShaderType>(i)];
+		else
+			programHashKey += "NONE";
+	}
+
+	for (std::set<std::string>::iterator it = define.begin(); it != define.end(); it++) {
+		programHashKey += "_" + *it;
+	}
+
+	return std::hash<std::string>()(programHashKey);
 }
 
-GLuint ProgramManager::getID(std::string const &programName) {
-	if (this->program.count(programName))
-		return this->program[programName];
+void ProgramManager::setBool(size_t hashCode, std::string const &name, bool value) {         
+	if (this->program.count(hashCode))
+	glUniform1i(glGetUniformLocation(this->program[hashCode], name.c_str()), (int)value); 
+}
+void ProgramManager::setInt(size_t hashCode, std::string const &name, int value) { 
+	if (this->program.count(hashCode))
+	glUniform1i(glGetUniformLocation(this->program[hashCode], name.c_str()), value); 
+}
+void ProgramManager::setFloat(size_t hashCode, std::string const &name, float value) { 
+	if (this->program.count(hashCode))
+	glUniform1f(glGetUniformLocation(this->program[hashCode], name.c_str()), value); 
+}
+void ProgramManager::setVec2(size_t hashCode, std::string const &name, glm::vec2 value) { 
+	if (this->program.count(hashCode))
+	glUniform2fv(glGetUniformLocation(this->program[hashCode], name.c_str()), 1, &value[0]); 
+}
+void ProgramManager::setVec2(size_t hashCode, std::string const &name, float x, float y) { 
+	if (this->program.count(hashCode))
+	glUniform2f(glGetUniformLocation(this->program[hashCode], name.c_str()), x, y); 
+}
+void ProgramManager::setVec3(size_t hashCode, std::string const &name, glm::vec3 value) { 
+	if (this->program.count(hashCode))
+	glUniform3fv(glGetUniformLocation(this->program[hashCode], name.c_str()), 1, &value[0]); 
+}
+void ProgramManager::setVec3(size_t hashCode, std::string const &name, float x, float y, float z) { 
+	if (this->program.count(hashCode))
+	glUniform3f(glGetUniformLocation(this->program[hashCode], name.c_str()), x, y, z); 
+}
+void ProgramManager::setVec4(size_t hashCode, std::string const &name, glm::vec4 value) { 
+	if (this->program.count(hashCode))
+	glUniform4fv(glGetUniformLocation(this->program[hashCode], name.c_str()), 1, &value[0]); 
+}
+void ProgramManager::setVec4(size_t hashCode, std::string const &name, float x, float y, float z, float w)  { 
+	if (this->program.count(hashCode))
+	glUniform4f(glGetUniformLocation(this->program[hashCode], name.c_str()), x, y, z, w); 
+}
+void ProgramManager::setMat3(size_t hashCode, std::string const &name, glm::mat3 &mat) {
+	if (this->program.count(hashCode))
+	glUniformMatrix3fv(glGetUniformLocation(this->program[hashCode], name.c_str()), 1, GL_FALSE, &mat[0][0]);
+}
+void ProgramManager::setMat4(size_t hashCode, std::string const &name, glm::mat4 &mat) {
+	if (this->program.count(hashCode))
+	glUniformMatrix4fv(glGetUniformLocation(this->program[hashCode], name.c_str()), 1, GL_FALSE, &mat[0][0]);
+}
+
+void ProgramManager::useProgram(size_t hashCode) {
+	if (this->program.count(hashCode))
+	glUseProgram(this->program[hashCode]);
+}
+
+GLuint ProgramManager::getID(size_t hashCode) {
+	if (this->program.count(hashCode))
+		return this->program[hashCode];
 	return 0;
 }

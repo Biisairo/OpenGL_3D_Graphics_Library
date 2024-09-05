@@ -1,9 +1,7 @@
 #version 430 core
 
-#include <common/CommonStruct.glsl>
-
 // USE_NORMAL
-// USE_TEXCOORD
+// USE_TEXTURE
 
 // USE_DIFFUSE_MAP
 // USE_NORMAL_MAP
@@ -36,7 +34,7 @@ out vec4 FragColor;
 void main(){
     TangentSpace tangentSpace;
     tangentSpace.TBN = mat4(1.0);
-    #if defined(USE_NORMAL) && defined(USE_TEXCOORD)
+    #if defined(USE_NORMAL) && defined(USE_TEXTURE)
         tangentSpace.TBN = fs_in.TBN;
         tangentSpace.viewPos = fs_in.TBN * VIEWPOS;
         tangentSpace.fragPos = fs_in.TBN * fs_in.FragPos;
@@ -65,12 +63,11 @@ void main(){
 
     // get diffuse color
     vec3 color = fs_in.VertexColor;
-    #if defined(USE_DIFFUSE_MAP) && defined(USE_TEXCOORD)
+    #if defined(USE_DIFFUSE_MAP) && defined(USE_TEXTURE)
         color = texture(diffuseMap, fs_in.TexCoords).rgb * fs_in.VertexColor;
     #endif
 
     vec3 lightColorSum = vec3(0.0);
-    #if defined(USE_NORMAL)
     for (int i = 0; i < LIGHT_COUNT; i++) {
         vec3 lightColor = vec3(0);
         if (LIGHT[i].emitType == 0) {
@@ -84,7 +81,6 @@ void main(){
     }
     
     color = color * lightColorSum;
-    #endif
 
     FragColor = vec4(color, fs_in.VertexColor.w);
 }

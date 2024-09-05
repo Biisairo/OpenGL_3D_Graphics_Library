@@ -1,12 +1,18 @@
 #ifndef PCH_HPP
 #define PCH_HPP
 
+#define SHADER_PATH "./src/shader/"
+
+#define COMMON_SHADER_VERT "vs/CameraNormal.vert"
+#define COMMON_SHADER_FRAG "fs/CameraNormal.frag"
+
 // std
 #include <iostream>
 #include <string>
 #include <vector>
 #include <queue>
 #include <map>
+#include <set>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
