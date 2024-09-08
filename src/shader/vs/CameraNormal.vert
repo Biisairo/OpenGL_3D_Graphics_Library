@@ -1,5 +1,3 @@
-#version 430 core
-
 #include <common/CommonStruct.glsl>
 
 // USE_NORMAL
@@ -7,7 +5,7 @@
 
 uniform mat4 MODEL;
 
-layout (std140, binding = 0) uniform Matrices
+layout (std140) uniform Matrices
 {
     mat4 PROJECTION;
     mat4 VIEW;
@@ -19,24 +17,31 @@ layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoords;
 layout (location = 3) in vec3 aTangent;
 layout (location = 4) in vec3 aBitangent;
-layout (location = 5) in vec3 aColor;
+layout (location = 5) in vec4 aColor;
 
-out Camera_VS_OUT vs_out;
+out Camera_VS_OUT {
+	vec4 VertexColor;
 
-void main(){
-    #if defined(USE_NORMAL) && defined(USE_TEXCOORD)
-        CAMERA_VNT();
-    #elif defined(USE_NORMAL)
-        CAMERA_VN();
-    #elif defined(USE_TEXCOORD)
-        CAMERA_VT();
-    #else
-        CAMERA_V();
-    #endif
-}
+    vec3 FragPos;
+	vec3 Normal;
+
+    vec2 TexCoords;
+
+    mat4 TBN;
+} vs_out;
+
+// funtion
 
 #if defined(USE_NORMAL) && defined(USE_TEXCOORD)
 void CAMERA_VNT() {
+    // init
+    vs_out.VertexColor = vec4(0.0);
+    vs_out.FragPos = vec3(0.0);
+	vs_out.Normal = vec3(0.0);
+    vs_out.TexCoords = vec2(0.0);
+    vs_out.TBN = mat4(0.0);
+    // init
+
     vs_out.VertexColor = aColor;
 
     vs_out.FragPos = vec3(MODEL * vec4(aPos, 1.0));   
@@ -85,3 +90,17 @@ void CAMERA_V() {
 	gl_Position = PROJECTION * VIEW * MODEL * vec4(aPos, 1.0);
 }
 #endif
+
+// funtion
+
+void main(){
+    #if defined(USE_NORMAL) && defined(USE_TEXCOORD)
+        CAMERA_VNT();
+    #elif defined(USE_NORMAL)
+        CAMERA_VN();
+    #elif defined(USE_TEXCOORD)
+        CAMERA_VT();
+    #else
+        CAMERA_V();
+    #endif
+}

@@ -22,6 +22,16 @@ class ProgramManager {
 		ProgramManager();
 		~ProgramManager();
 
+		GLuint getProgram(
+			std::unordered_map<ShaderType, std::string> &shader,
+			std::set<std::string> &define
+		);
+
+		void useProgram(size_t hashCode);
+
+		std::vector<GLuint> getAllPrograms();
+
+	private:
 		GLuint loadShader(ShaderType shaderType, std::string const &fileName, std::set<std::string> &define);
 
 		size_t loadProgram(
@@ -34,6 +44,9 @@ class ProgramManager {
 			std::set<std::string> &define
 		);
 
+		GLuint getID(size_t hashCode);
+	
+	public: // uniform function
 		void setBool(size_t hashCode, std::string const &name, bool value);
 		void setInt(size_t hashCode, std::string const &name, int value);
 		void setFloat(size_t hashCode, std::string const &name, float value);
@@ -45,9 +58,6 @@ class ProgramManager {
 		void setVec4(size_t hashCode, std::string const &name, float x, float y, float z, float w);
 		void setMat3(size_t hashCode, std::string const &name, glm::mat3 &mat);
 		void setMat4(size_t hashCode, std::string const &name, glm::mat4 &mat);
-
-		void useProgram(size_t hashCode);
-		GLuint getID(size_t hashCode);
 };
 
 #endif

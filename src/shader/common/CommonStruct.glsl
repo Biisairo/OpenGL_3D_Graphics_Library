@@ -1,16 +1,17 @@
 #ifndef COMMON_STRUCT_GLSL
 #define COMMON_STRUCT_GLSL
 
-struct Camera_VS_OUT {
-	vec4 VertexColor;
+// struct 를 사용하면 불가능
+// struct Camera_VS_OUT {
+// 	vec4 VertexColor;
 
-    vec3 FragPos;
-	vec3 Normal;
+//     vec3 FragPos;
+// 	vec3 Normal;
 
-    vec2 TexCoords;
+//     vec2 TexCoords;
 
-    mat4 TBN;
-};
+//     mat4 TBN;
+// };
 
 struct Light {
     uint emitType;

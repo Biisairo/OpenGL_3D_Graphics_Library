@@ -8,6 +8,8 @@ Mesh::Mesh(Device* device, Mesh *parent) {
 	this->parent = parent;
 	if (this->parent != nullptr)
 		this->parent->addChild(this);
+
+    this->needUpdate = false;
 }
 
 Mesh::~Mesh() {
@@ -23,63 +25,52 @@ void Mesh::addChild(Mesh* child) {
 }
 
 void Mesh::setPosition (std::vector<glm::vec3> &position) {
+    this->needUpdate = true;
+
 	this->position = position;
 }
 
 void Mesh::setNormal (std::vector<glm::vec3> &normal) {
+    this->needUpdate = true;
+
 	this->normal = normal;
 }
 
 void Mesh::setTexCoords (std::vector<glm::vec2> &texCoords) {
+    this->needUpdate = true;
+
 	this->texCoords = texCoords;
 }
 
 void Mesh::setTangent (std::vector<glm::vec3> &tangent) {
+    this->needUpdate = true;
+
 	this->tangent = tangent;
 }
 
 void Mesh::setBitangent (std::vector<glm::vec3> &bitangent) {
+    this->needUpdate = true;
+
 	this->bitangent = bitangent;
 }
 
 void Mesh::setColors (std::vector<glm::vec4> &colors) {
+    this->needUpdate = true;
+
 	this->colors = colors;
 }
 
 void Mesh::setColors (glm::vec4 &color) {
+    this->needUpdate = true;
+
 	this->colors.clear();
 	this->colors.push_back(color);
 }
 
 void Mesh::setIndex (std::vector<GLuint> &index) {
+    this->needUpdate = true;
+
 	this->index = index;
-}
-
-void Mesh::setVertexData() {
-	if (this->position.size() != this->normal.size()) {
-		this->makeNormal();
-	}
-	
-	if (this->position.size() != this->texCoords.size()) {
-		this->texCoords.clear();
-		this->tangent.clear();
-		this->bitangent.clear();
-	} else if (this->position.size() != this->tangent.size() ||
-		this->position.size() != this->bitangent.size()) {
-		this->makeTangentSpace();
-	}
-
-	if (this->position.size() != this->colors.size() && this->colors.size() == 1) {
-		glm::vec4 color;
-		if (this->colors.size() == 0)
-			color = glm::vec4(1, 1, 1, 1);
-		else
-			glm::vec4 color = this->colors.front();
-		this->colors.clear();
-		
-		for (int i = 0; i < position.size(); i++)
-			this->colors.push_back(color);
-	}
 }
 
 
@@ -113,18 +104,58 @@ glm::mat4& Mesh::getModel() {
 	return this->model;
 }
 
-// parameter 를 수정한 뒤 수동으로 호출할 것
-void Mesh::updateBuffer() {
-	this->device->updateMesh(
-		this->getID(), 
-		this->position,
-		this->normal,
-		this->texCoords,
-		this->tangent,
-		this->bitangent,
-		this->colors,
-		this->index
-	);
+void Mesh::drawMesh() {
+    if (this->needUpdate) {
+        this->updateBuffer();
+        this->needUpdate = false;
+    }
+    
+    this->device->draw(this->getID(), this->model, DRAW_TRIANGLES);
+}
+
+void Mesh::drawLine() {
+    if (this->needUpdate) {
+        this->updateBuffer();
+        this->needUpdate = false;
+    }
+    
+    this->device->draw(this->getID(), this->model, DRAW_LINE);
+}
+
+void Mesh::drawPoint() {
+    if (this->needUpdate) {
+        this->updateBuffer();
+        this->needUpdate = false;
+    }
+    
+    this->device->draw(this->getID(), this->model, DRAW_POINT);
+}
+
+void Mesh::setVertexData() {
+	if (this->position.size() != this->normal.size()) {
+		this->makeNormal();
+	}
+	
+	if (this->position.size() != this->texCoords.size()) {
+		this->texCoords.clear();
+		this->tangent.clear();
+		this->bitangent.clear();
+	} else if (this->position.size() != this->tangent.size() ||
+		this->position.size() != this->bitangent.size()) {
+		this->makeTangentSpace();
+	}
+
+	if (this->position.size() != this->colors.size() && this->colors.size() == 1) {
+		glm::vec4 color;
+		if (this->colors.size() == 0)
+			color = glm::vec4(1, 1, 1, 1);
+		else
+			glm::vec4 color = this->colors.front();
+		this->colors.clear();
+		
+		for (int i = 0; i < position.size(); i++)
+			this->colors.push_back(color);
+	}
 }
 
 void Mesh::makeNormal() {
@@ -234,4 +265,19 @@ void Mesh::makeTangentSpace() {
             b = glm::normalize(b - glm::dot(b, n) * n - glm::dot(b, t) * t);
         }
     }
+}
+
+void Mesh::updateBuffer() {
+    this->setVertexData();
+
+    this->device->updateMesh(
+        this->getID(), 
+        this->position,
+        this->normal,
+        this->texCoords,
+        this->tangent,
+        this->bitangent,
+        this->colors,
+        this->index
+    );
 }

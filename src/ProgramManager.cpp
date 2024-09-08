@@ -1,5 +1,6 @@
 #include "ProgramManager.hpp"
 
+// public
 ProgramManager::ProgramManager() {
 }
 
@@ -9,8 +10,36 @@ ProgramManager::~ProgramManager() {
 	}
 }
 
+GLuint ProgramManager::getProgram(
+	std::unordered_map<ShaderType, std::string> &shader,
+	std::set<std::string> &define
+) {
+	size_t hashCode = this->getHash(shader, define);
+	GLuint programID = this->getID(hashCode);
+	if (programID)
+		return programID;
+	
+	return this->loadProgram(shader, define);
+}
+
+void ProgramManager::useProgram(size_t hashCode) {
+	if (this->program.count(hashCode))
+		glUseProgram(this->program[hashCode]);
+	else
+		glUseProgram(0);
+}
+
+std::vector<GLuint> ProgramManager::getAllPrograms() {
+	std::vector<GLuint> res;
+	for (std::unordered_map<size_t, GLuint>::iterator it = this->program.begin(); it != this->program.end(); it++) {
+		res.push_back(it->second);
+	}
+	return res;
+}
+
+// private
 GLuint ProgramManager::loadShader(ShaderType shaderType, std::string const &fileName, std::set<std::string> &define) {
-	std::string shaderCode = "";
+	std::string shaderCode = "#version 410 core\n";
 	for (std::set<std::string>::iterator it = define.begin(); it != define.end(); it++) {
 		shaderCode += "#define " + *it + "\n";
 	}
@@ -49,8 +78,16 @@ GLuint ProgramManager::loadShader(ShaderType shaderType, std::string const &file
 	GLint check;
 	glGetShaderiv(id, GL_COMPILE_STATUS, &check);
 	if (check == GL_FALSE) {
+		GLint infoLogLength;
+		glGetShaderiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+		std::vector<GLchar> infoLog(infoLogLength);
+		glGetShaderInfoLog(id, infoLogLength, &infoLogLength, infoLog.data());
+
 		glDeleteShader(id);
+
 		std::cerr << fileName << " not compiled" << std::endl;
+		std::cerr << "Shader compile log: " << infoLog.data() << std::endl;
 		return 0;
 	};
 
@@ -76,12 +113,20 @@ size_t ProgramManager::loadProgram(
 		glDeleteShader(shaderID[i]);
 	}
 
-	// check link done
 	GLint check;
 	glGetProgramiv(id, GL_LINK_STATUS, &check);
 	if (check == GL_FALSE) {
+		// 링크 실패 시 오류 로그를 가져옵니다.
+		GLint infoLogLength = 0;
+		glGetProgramiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
+		
+		if (infoLogLength > 0) {
+			std::vector<char> infoLog(infoLogLength);
+			glGetProgramInfoLog(id, infoLogLength, NULL, infoLog.data());
+			std::cerr << "Program link error: " << std::endl << infoLog.data() << std::endl;
+		}
+
 		glDeleteProgram(id);
-		std::cerr << "Program does not linked" << std::endl;
 		return 0;
 	}
 
@@ -91,7 +136,7 @@ size_t ProgramManager::loadProgram(
 	return hashCode;
 }
 
-size_t getHash(
+size_t ProgramManager::getHash(
 	std::unordered_map<ShaderType, std::string> &shader,
 	std::set<std::string> &define
 ) {
@@ -112,6 +157,13 @@ size_t getHash(
 	return std::hash<std::string>()(programHashKey);
 }
 
+GLuint ProgramManager::getID(size_t hashCode) {
+	if (this->program.count(hashCode))
+		return this->program[hashCode];
+	return 0;
+}
+
+// uniform function
 void ProgramManager::setBool(size_t hashCode, std::string const &name, bool value) {         
 	if (this->program.count(hashCode))
 	glUniform1i(glGetUniformLocation(this->program[hashCode], name.c_str()), (int)value); 
@@ -155,15 +207,4 @@ void ProgramManager::setMat3(size_t hashCode, std::string const &name, glm::mat3
 void ProgramManager::setMat4(size_t hashCode, std::string const &name, glm::mat4 &mat) {
 	if (this->program.count(hashCode))
 	glUniformMatrix4fv(glGetUniformLocation(this->program[hashCode], name.c_str()), 1, GL_FALSE, &mat[0][0]);
-}
-
-void ProgramManager::useProgram(size_t hashCode) {
-	if (this->program.count(hashCode))
-	glUseProgram(this->program[hashCode]);
-}
-
-GLuint ProgramManager::getID(size_t hashCode) {
-	if (this->program.count(hashCode))
-		return this->program[hashCode];
-	return 0;
 }

@@ -28,6 +28,8 @@ class Mesh : private IResourceID {
 
 		Mesh *parent;
 		std::vector<Mesh*> children;
+
+		bool needUpdate;
 		
 		glm::mat4 model;
 		std::vector<glm::mat4> instancing;
@@ -48,7 +50,7 @@ class Mesh : private IResourceID {
 		Mesh(Device* device, Mesh *parent = nullptr);
 		virtual ~Mesh();
 		Mesh(const Mesh&) = delete;
-    	Mesh& operator=(const Mesh&) = delete;
+		Mesh& operator=(const Mesh&) = delete;
 
 		void addChild(Mesh* child);
 
@@ -61,7 +63,6 @@ class Mesh : private IResourceID {
 		void setColors (std::vector<glm::vec4> &colors);
 		void setColors (glm::vec4 &color);
 		void setIndex (std::vector<GLuint> &index);
-		void setVertexData();
 
 		void modelInit();
 		void setInstancing(std::vector<glm::mat4> &instancing);
@@ -70,12 +71,15 @@ class Mesh : private IResourceID {
 		void setTranslate(glm::vec3 pos);
 		glm::mat4& getModel();
 
-		// update buffer
-		void updateBuffer();
+		void drawMesh();
+		void drawLine();
+		void drawPoint();
 
 	private:
+		void setVertexData();
 		void makeNormal();
 		void makeTangentSpace();
+		void updateBuffer();
 };
 
 #endif

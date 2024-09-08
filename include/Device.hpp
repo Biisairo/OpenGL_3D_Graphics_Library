@@ -4,6 +4,7 @@
 #include "pch.hpp"
 
 #include "ProgramManager.hpp"
+#include "UniformBlockManager.hpp"
 #include "UserInput.hpp"
 
 struct WindowInfo {
@@ -16,13 +17,20 @@ struct MeshObject {
 	GLuint VAO;
 	GLuint VBO;
 	GLuint EBO;
-	uint indexCount;
+	uint count;
 	size_t program;
+};
+
+enum DrawType {
+	DRAW_TRIANGLES,
+	DRAW_LINE,
+	DRAW_POINT,
 };
 
 class Device {
 	private:
 		ProgramManager programManager;
+		UniformBlockManager uniformBlockManager;
 
 		std::map<std::string, WindowInfo> windows;
 
@@ -50,7 +58,7 @@ class Device {
 		);
 		// void updateMesh(texture);
 		void deleteMesh(uint ID);
-		void drawMesh(uint ID);
+		void draw(uint ID, glm::mat4 model, DrawType drawType = DRAW_TRIANGLES);
 
 		void updateCamera(uint ID);
 

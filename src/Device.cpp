@@ -13,7 +13,7 @@ void Device::init() {
 	}
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	#ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -101,11 +101,10 @@ void Device::updateMesh(
 	GLuint EBO;
 
 	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
 
+	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	GLsizeiptr bufferSize = 0;
 	bufferSize += position.size() * sizeof(glm::vec3);
@@ -171,9 +170,13 @@ void Device::updateMesh(
 		offsetSize += colors.size() * sizeof(glm::vec4);
 	}
 
-	
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, index.size() * sizeof(GLuint), index.data(), GL_STATIC_DRAW);
+	if (index.size()) {
+		glGenBuffers(1, &EBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, index.size() * sizeof(GLuint), index.data(), GL_STATIC_DRAW);
+	} else {
+		EBO = 0;
+	}
 
 	glBindVertexArray(0);
 
@@ -187,15 +190,17 @@ void Device::updateMesh(
 	if (texCoords.size())
 		define.insert("USE_TEXCOORD");
 
-	size_t program = this->programManager.getHash(shader, define);
-	if (this->programManager.getID(program) == 0)
-		this->programManager.loadProgram(shader, define);
+
+	size_t program = this->programManager.getProgram(shader, define);
 
 	MeshObject meshObject;
 	meshObject.VAO = VAO;
 	meshObject.VBO = VBO;
 	meshObject.EBO = EBO;
-	meshObject.indexCount = index.size();
+	if (EBO == 0)
+		meshObject.count = position.size();
+	else
+		meshObject.count = index.size();
 	meshObject.program = program;
 
 	this->mesh_objects.insert(std::make_pair(ID, meshObject));
@@ -211,11 +216,33 @@ void Device::deleteMesh(uint ID) {
 	}
 }
 
-void Device::drawMesh(uint ID) {
+void Device::draw(uint ID, glm::mat4 model, DrawType drawType) {
+	GLenum glDrawType;
+	switch (drawType) {
+		case DRAW_TRIANGLES:
+			glDrawType = GL_TRIANGLES;
+			break;
+		case DRAW_LINE:
+			glDrawType = GL_LINE;
+			break;
+		case DRAW_POINT:
+			glDrawType = GL_POINT;
+			break;
+		default:
+			glDrawType = GL_POINT;
+			break;
+	}
+
 	if (this->mesh_objects.count(ID)) {
+		this->programManager.useProgram(this->mesh_objects[ID].program);
+		this->programManager.setMat4(this->mesh_objects[ID].program, "MODEL", model);
 		glBindVertexArray(this->mesh_objects[ID].VAO);
-		glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(this->mesh_objects[ID].indexCount), GL_UNSIGNED_INT, NULL);
+		if (this->mesh_objects[ID].EBO == 0)
+			glDrawArrays(glDrawType, 0, this->mesh_objects[ID].count);
+		else
+			glDrawElements(glDrawType, static_cast<unsigned int>(this->mesh_objects[ID].count), GL_UNSIGNED_INT, NULL);
 		glBindVertexArray(0);
+		this->programManager.useProgram(0);
 	}
 }
 
