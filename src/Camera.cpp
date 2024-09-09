@@ -63,14 +63,15 @@ void Camera::update() {
 	);
 }
 
-glm::mat4 Camera::getProjection() {
-	return this->projection;
-}
-
-glm::mat4 Camera::getView() {
-	return this->view;
+Matrices Camera::getMatrices() {
+	return {
+		this->projection,
+		this->view,
+		this->position
+	};
 }
 
 void Camera::updateUniform() {
-	this->device->updateCamera(this->getID());
+	Matrices matrices = this->getMatrices();
+	this->device->updateCamera(this->getID(), matrices);
 }

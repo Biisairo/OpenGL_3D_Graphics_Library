@@ -7,18 +7,27 @@
 #include "UniformBlockManager.hpp"
 #include "UserInput.hpp"
 
+// window
 struct WindowInfo {
 	std::string title;
 	GLFWwindow* window;
 	std::queue<UserInput> userInput;
 };
 
+// mesh
 struct MeshObject {
 	GLuint VAO;
 	GLuint VBO;
 	GLuint EBO;
 	uint count;
 	size_t program;
+};
+
+// camera
+struct Matrices {
+    glm::mat4 projecton;
+    glm::mat4 view;
+	glm::vec3 viewpos;
 };
 
 enum DrawType {
@@ -60,9 +69,11 @@ class Device {
 		void deleteMesh(uint ID);
 		void draw(uint ID, glm::mat4 model, DrawType drawType = DRAW_TRIANGLES);
 
-		void updateCamera(uint ID);
+		void updateCamera(uint ID, Matrices matrices);
 
 		void deleteCamera(uint ID);
+
+
 };
 
 // callback function

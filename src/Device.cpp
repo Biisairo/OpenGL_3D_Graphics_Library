@@ -233,6 +233,10 @@ void Device::draw(uint ID, glm::mat4 model, DrawType drawType) {
 			break;
 	}
 
+	std::vector<GLuint> programs = this->programManager.getAllPrograms();
+	this->uniformBlockManager.addUniformBlock("Matrices", programs);
+	this->uniformBlockManager.addUniformBlock("Lights", programs);
+
 	if (this->mesh_objects.count(ID)) {
 		this->programManager.useProgram(this->mesh_objects[ID].program);
 		this->programManager.setMat4(this->mesh_objects[ID].program, "MODEL", model);
@@ -246,8 +250,8 @@ void Device::draw(uint ID, glm::mat4 model, DrawType drawType) {
 	}
 }
 
-void Device::updateCamera(uint ID) {
-	
+void Device::updateCamera(uint ID, Matrices matrices) {
+	this->uniformBlockManager.setUniformBufferData("Matrices", sizeof(Matrices), &matrices);
 }
 
 void Device::deleteCamera(uint ID) {

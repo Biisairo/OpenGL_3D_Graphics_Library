@@ -51,3 +51,17 @@ void UniformBlockManager::useUniformBlock(std::string const &uniformBlockName) {
 void UniformBlockManager::unuseUniformBlock() {
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
+
+void UniformBlockManager::setUniformBufferData(std::string const &uniformBlockName, size_t size, void* data) {
+	if (this->uniformBlocks.count(uniformBlockName)) {
+		UniformBlock &ub = this->uniformBlocks[uniformBlockName];
+
+		glBindBuffer(GL_UNIFORM_BUFFER, ub.uniformBlockBuffer);
+
+		glBufferData(GL_UNIFORM_BUFFER, size, NULL, GL_STATIC_DRAW);
+		glBindBufferRange(GL_UNIFORM_BUFFER, 0, ub.uniformBlockBuffer, 0, size);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, size, data);
+
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	}
+}

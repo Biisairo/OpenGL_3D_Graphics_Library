@@ -23,6 +23,8 @@ class UniformBlockManager{
 		void useUniformBlock(std::string const &uniformBlockName);
 		void unuseUniformBlock();
 
+		void setUniformBufferData(std::string const &uniformBlockName, size_t size, void* data);
+
 };
 
 #endif

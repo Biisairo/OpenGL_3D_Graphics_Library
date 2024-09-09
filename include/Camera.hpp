@@ -49,8 +49,7 @@ class Camera : private IResourceID {
 
 		void update();
 
-		glm::mat4 getProjection();
-		glm::mat4 getView();
+		Matrices getMatrices();
 
 		void updateUniform();
 };
