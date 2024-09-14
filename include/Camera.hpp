@@ -4,17 +4,9 @@
 #include "pch.hpp"
 
 #include "IResourceID.hpp"
+#include "CommonStructure.hpp"
+#include "CommonEnum.hpp"
 #include "Device.hpp"
-
-enum ProjectionType {
-	PROJECTION_PERSPECTIVE,
-	PROJECTION_ORTHO
-};
-
-enum CenterType {
-	CENTER_CAMERA,
-	CENTER_OBJECT
-};
 
 class Camera : private IResourceID {
 	private:
@@ -49,7 +41,7 @@ class Camera : private IResourceID {
 
 		void update();
 
-		Matrices getMatrices();
+		CameraDTO getCameraDTO();
 
 		void updateUniform();
 };

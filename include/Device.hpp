@@ -6,35 +6,8 @@
 #include "ProgramManager.hpp"
 #include "UniformBlockManager.hpp"
 #include "UserInput.hpp"
-
-// window
-struct WindowInfo {
-	std::string title;
-	GLFWwindow* window;
-	std::queue<UserInput> userInput;
-};
-
-// mesh
-struct MeshObject {
-	GLuint VAO;
-	GLuint VBO;
-	GLuint EBO;
-	uint count;
-	size_t program;
-};
-
-// camera
-struct Matrices {
-    glm::mat4 projecton;
-    glm::mat4 view;
-	glm::vec3 viewpos;
-};
-
-enum DrawType {
-	DRAW_TRIANGLES,
-	DRAW_LINE,
-	DRAW_POINT,
-};
+#include "CommonStructure.hpp"
+#include "CommonEnum.hpp"
 
 class Device {
 	private:
@@ -52,28 +25,19 @@ class Device {
 		void init();
 		void setting();
 
+		void render();
+
 		void addWindow(std::string const &title, double width, double height);
 		void activeWindow(std::string const &title);
 
-		void updateMesh(
-			uint ID,
-			std::vector<glm::vec3> position,
-			std::vector<glm::vec3> normal,
-			std::vector<glm::vec2> texCoords,
-			std::vector<glm::vec3> tangent,
-			std::vector<glm::vec3> bitangent,
-			std::vector<glm::vec4> colors,
-			std::vector<uint> index
-		);
+		void updateMesh(MeshDTO meshDTO);
 		// void updateMesh(texture);
 		void deleteMesh(uint ID);
 		void draw(uint ID, glm::mat4 model, DrawType drawType = DRAW_TRIANGLES);
 
-		void updateCamera(uint ID, Matrices matrices);
+		void updateCamera(CameraDTO cameraDTO);
 
 		void deleteCamera(uint ID);
-
-
 };
 
 // callback function

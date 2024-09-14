@@ -104,6 +104,19 @@ glm::mat4& Mesh::getModel() {
 	return this->model;
 }
 
+MeshDTO Mesh::getMeshDTO() {
+    return {
+        this->getID(), 
+        this->position,
+        this->normal,
+        this->texCoords,
+        this->tangent,
+        this->bitangent,
+        this->colors,
+        this->index
+    };
+}
+
 void Mesh::drawMesh() {
     if (this->needUpdate) {
         this->updateBuffer();
@@ -271,13 +284,6 @@ void Mesh::updateBuffer() {
     this->setVertexData();
 
     this->device->updateMesh(
-        this->getID(), 
-        this->position,
-        this->normal,
-        this->texCoords,
-        this->tangent,
-        this->bitangent,
-        this->colors,
-        this->index
+        this->getMeshDTO()
     );
 }

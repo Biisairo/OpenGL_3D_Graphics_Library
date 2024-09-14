@@ -63,8 +63,9 @@ void Camera::update() {
 	);
 }
 
-Matrices Camera::getMatrices() {
+CameraDTO Camera::getCameraDTO() {
 	return {
+		this->getID(),
 		this->projection,
 		this->view,
 		this->position
@@ -72,6 +73,6 @@ Matrices Camera::getMatrices() {
 }
 
 void Camera::updateUniform() {
-	Matrices matrices = this->getMatrices();
-	this->device->updateCamera(this->getID(), matrices);
+	CameraDTO cameraDTO = this->getCameraDTO();
+	this->device->updateCamera(cameraDTO);
 }

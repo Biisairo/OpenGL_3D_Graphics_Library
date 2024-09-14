@@ -4,23 +4,9 @@
 #include "pch.hpp"
 
 #include "IResourceID.hpp"
+#include "CommonStructure.hpp"
+#include "CommonEnum.hpp"
 #include "Device.hpp"
-
-enum TextureType {
-	TEXTURE_DIFFUSE,
-	TEXTURE_NORMAL,
-	TEXTURE_SPECULAR,
-	TEXTURE_ALPHA,
-	TEXTURE_LIGHT_MAP,
-	TEXTURE_SHADOW_MAP,
-	TEXTURE_ENV_MAP,
-	TEXTURE_SKYBOX,
-	TEXTURE_DISPLACEMENT_MAP,
-	TEXTURE_HEIGHT_MAP,
-	TEXTURE_RANDER_TARGET,
-	TEXTURE_TEXTURE_ARRAY,
-	TEXTURE_3D
-};
 
 class Mesh : private IResourceID {
 	private:
@@ -70,6 +56,7 @@ class Mesh : private IResourceID {
 		void setRotate(float angle, glm::vec3 axis);
 		void setTranslate(glm::vec3 pos);
 		glm::mat4& getModel();
+		MeshDTO getMeshDTO();
 
 		void drawMesh();
 		void drawLine();

@@ -32,6 +32,14 @@ void Device::setting() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
+void Device::render() {
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.1, 0.2, 0.1, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
+	// glfwSwapBuffers(this->window);
+	glfwPollEvents();
+}
+
 void Device::addWindow(std::string const &title, double width, double height) {
 	GLFWwindow *window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
 	if (!window) {
@@ -86,16 +94,7 @@ void Device::activeWindow(std::string const &title) {
 		glfwMakeContextCurrent(NULL);
 }
 
-void Device::updateMesh(
-		uint ID,
-		std::vector<glm::vec3> position,
-		std::vector<glm::vec3> normal,
-		std::vector<glm::vec2> texCoords,
-		std::vector<glm::vec3> tangent,
-		std::vector<glm::vec3> bitangent,
-		std::vector<glm::vec4> colors,
-		std::vector<GLuint> index
-	) {
+void Device::updateMesh(MeshDTO meshDTO) {
 	GLuint VAO;
 	GLuint VBO;
 	GLuint EBO;
@@ -107,73 +106,73 @@ void Device::updateMesh(
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	GLsizeiptr bufferSize = 0;
-	bufferSize += position.size() * sizeof(glm::vec3);
-	bufferSize += normal.size() * sizeof(glm::vec3);
-	bufferSize += texCoords.size() * sizeof(glm::vec2);
-	bufferSize += tangent.size() * sizeof(glm::vec3);
-	bufferSize += bitangent.size() * sizeof(glm::vec3);
-	bufferSize += colors.size() * sizeof(glm::vec4);
+	bufferSize += meshDTO.position.size() * sizeof(glm::vec3);
+	bufferSize += meshDTO.normal.size() * sizeof(glm::vec3);
+	bufferSize += meshDTO.texCoords.size() * sizeof(glm::vec2);
+	bufferSize += meshDTO.tangent.size() * sizeof(glm::vec3);
+	bufferSize += meshDTO.bitangent.size() * sizeof(glm::vec3);
+	bufferSize += meshDTO.colors.size() * sizeof(glm::vec4);
 	glBufferData(GL_ARRAY_BUFFER, bufferSize, NULL, GL_STATIC_DRAW);  
 
 
 	GLintptr offsetSize = 0;
 	{
-		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, position.size() * sizeof(glm::vec3), position.data());
+		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, meshDTO.position.size() * sizeof(glm::vec3), meshDTO.position.data());
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)offsetSize);
 		
-		offsetSize += position.size() * sizeof(glm::vec3);
+		offsetSize += meshDTO.position.size() * sizeof(glm::vec3);
 	}
 
-	if (normal.size())
+	if (meshDTO.normal.size())
 	{
-		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, normal.size() * sizeof(glm::vec3), normal.data());
+		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, meshDTO.normal.size() * sizeof(glm::vec3), meshDTO.normal.data());
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)offsetSize);
 		
-		offsetSize += normal.size() * sizeof(glm::vec3);
+		offsetSize += meshDTO.normal.size() * sizeof(glm::vec3);
 	}
 
-	if (texCoords.size())
+	if (meshDTO.texCoords.size())
 	{
-		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, texCoords.size() * sizeof(glm::vec2), texCoords.data());
+		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, meshDTO.texCoords.size() * sizeof(glm::vec2), meshDTO.texCoords.data());
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)offsetSize);
 
-		offsetSize += texCoords.size() * sizeof(glm::vec2);
+		offsetSize += meshDTO.texCoords.size() * sizeof(glm::vec2);
 	}
 
-	if (tangent.size())
+	if (meshDTO.tangent.size())
 	{
-		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, tangent.size() * sizeof(glm::vec3), tangent.data());
+		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, meshDTO.tangent.size() * sizeof(glm::vec3), meshDTO.tangent.data());
 		glEnableVertexAttribArray(3);
 		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)offsetSize);
 
-		offsetSize += tangent.size() * sizeof(glm::vec3);
+		offsetSize += meshDTO.tangent.size() * sizeof(glm::vec3);
 	}
 
-	if (bitangent.size())
+	if (meshDTO.bitangent.size())
 	{
-		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, bitangent.size() * sizeof(glm::vec3), bitangent.data());
+		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, meshDTO.bitangent.size() * sizeof(glm::vec3), meshDTO.bitangent.data());
 		glEnableVertexAttribArray(4);
 		glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)offsetSize);
 
-		offsetSize += bitangent.size() * sizeof(glm::vec3);
+		offsetSize += meshDTO.bitangent.size() * sizeof(glm::vec3);
 	}
 
-	if (colors.size())
+	if (meshDTO.colors.size())
 	{
-		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, colors.size() * sizeof(glm::vec4), colors.data());
+		glBufferSubData(GL_ARRAY_BUFFER, offsetSize, meshDTO.colors.size() * sizeof(glm::vec4), meshDTO.colors.data());
 		glEnableVertexAttribArray(5);
 		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)offsetSize);
 
-		offsetSize += colors.size() * sizeof(glm::vec4);
+		offsetSize += meshDTO.colors.size() * sizeof(glm::vec4);
 	}
 
-	if (index.size()) {
+	if (meshDTO.index.size()) {
 		glGenBuffers(1, &EBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, index.size() * sizeof(GLuint), index.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshDTO.index.size() * sizeof(GLuint), meshDTO.index.data(), GL_STATIC_DRAW);
 	} else {
 		EBO = 0;
 	}
@@ -185,9 +184,9 @@ void Device::updateMesh(
 	shader.insert(std::make_pair(FRAGMENT_SHADER, COMMON_SHADER_FRAG));
 
 	std::set<std::string> define;
-	if (normal.size())
+	if (meshDTO.normal.size())
 		define.insert("USE_NORMAL");
-	if (texCoords.size())
+	if (meshDTO.texCoords.size())
 		define.insert("USE_TEXCOORD");
 
 
@@ -198,12 +197,12 @@ void Device::updateMesh(
 	meshObject.VBO = VBO;
 	meshObject.EBO = EBO;
 	if (EBO == 0)
-		meshObject.count = position.size();
+		meshObject.count = meshDTO.position.size();
 	else
-		meshObject.count = index.size();
+		meshObject.count = meshDTO.index.size();
 	meshObject.program = program;
 
-	this->mesh_objects.insert(std::make_pair(ID, meshObject));
+	this->mesh_objects.insert(std::make_pair(meshDTO.ID, meshObject));
 }
 
 void Device::deleteMesh(uint ID) {
@@ -250,17 +249,13 @@ void Device::draw(uint ID, glm::mat4 model, DrawType drawType) {
 	}
 }
 
-void Device::updateCamera(uint ID, Matrices matrices) {
-	this->uniformBlockManager.setUniformBufferData("Matrices", sizeof(Matrices), &matrices);
+void Device::updateCamera(CameraDTO cameraDTO) {
+	this->uniformBlockManager.setUniformBufferData("Matrices", sizeof(glm::mat4) * 2 + sizeof(glm::vec3), &(cameraDTO.projecton));
 }
 
 void Device::deleteCamera(uint ID) {
 	
 }
-
-
-
-
 
 
 

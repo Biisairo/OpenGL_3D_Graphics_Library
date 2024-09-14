@@ -59,7 +59,7 @@ void UniformBlockManager::setUniformBufferData(std::string const &uniformBlockNa
 		glBindBuffer(GL_UNIFORM_BUFFER, ub.uniformBlockBuffer);
 
 		glBufferData(GL_UNIFORM_BUFFER, size, NULL, GL_STATIC_DRAW);
-		glBindBufferRange(GL_UNIFORM_BUFFER, 0, ub.uniformBlockBuffer, 0, size);
+		glBindBufferRange(GL_UNIFORM_BUFFER, UBOIDX_CAMERA, ub.uniformBlockBuffer, 0, size);
 		glBufferSubData(GL_UNIFORM_BUFFER, 0, size, data);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);

@@ -2,6 +2,7 @@
 #define UNIFORMBLOCKMANAGER_HPP
 
 #include "pch.hpp"
+#include "CommonEnum.hpp"
 
 struct UniformBlock {
 	GLuint uniformBlockBuffer;
