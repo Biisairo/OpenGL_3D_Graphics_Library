@@ -6,18 +6,6 @@
 #define COMMON_SHADER_VERT "vs/CameraNormal.vert"
 #define COMMON_SHADER_FRAG "fs/CameraNormal.frag"
 
-// std
-#include <iostream>
-#include <string>
-#include <vector>
-#include <queue>
-#include <map>
-#include <unordered_map>
-#include <set>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
-
 #define GLFW_USE 1
 #define GLAD_USE 1
 #define GLM_USE 1
@@ -28,19 +16,12 @@
 
 // opengl
 #if GLFW_USE && GLAD_USE
-	#define GL_SILENCE_DEPRECATION
-	#define GLFW_INCLUDE_NONE
-	#include <glad/glad.h>
-	#include <GLFW/glfw3.h>
+	#include "Extern/OpenGLHeader.hpp"
 #endif
 
 // glm
 #if GLM_USE
-	#define GLM_ENABLE_EXPERIMENTAL
-	#include <glm/glm.hpp>
-	#include <glm/gtc/matrix_transform.hpp>
-	#include <glm/gtc/type_ptr.hpp>
-	#include <glm/gtx/transform.hpp>
+	#include "Extern/GLMHeader.hpp"
 #endif
 
 // stb

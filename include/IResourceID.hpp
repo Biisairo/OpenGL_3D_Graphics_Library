@@ -1,25 +1,28 @@
-#ifndef IRESOURCEID
-#define IRESOURCEID
+#ifndef IRESOURCEID_HPP
+#define IRESOURCEID_HPP
 
-#include "pch.hpp"
 #include <queue>
 
-class IResourceID {
-	private:
-		static std::queue<uint> IDPool;
-		static uint nextID;
-		uint ID;
-	
-	public:
-		IResourceID();
-		virtual ~IResourceID();
-		IResourceID(const IResourceID&);
-    	IResourceID& operator=(const IResourceID&);
+namespace CGL {
 
-		uint getID();
+	class IResourceID {
+		private:
+			static std::queue<unsigned int> IDPool;
+			static unsigned int nextID;
+			unsigned int ID;
+		
+		public:
+			IResourceID();
+			virtual ~IResourceID();
+			IResourceID(const IResourceID& other);
+			IResourceID& operator=(const IResourceID& other);
 
-	private:
-		uint setID();
-};
+			unsigned int getID();
+
+		private:
+			unsigned int setID();
+	};
+
+} // namespace CGL
 
 #endif

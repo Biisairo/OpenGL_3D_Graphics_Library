@@ -1,72 +1,54 @@
 #ifndef MESH_HPP
 #define MESH_HPP
 
-#include "pch.hpp"
+#include <vector>
 
-#include "IResourceID.hpp"
-#include "CommonStructure.hpp"
-#include "CommonEnum.hpp"
-#include "Device.hpp"
+#include "Extern/GLMHeader.hpp"
 
-class Mesh : private IResourceID {
-	private:
-		Device* device;
+#include "IObject3D.hpp"
+#include "Material.hpp"
 
-		Mesh *parent;
-		std::vector<Mesh*> children;
+namespace CGL {
 
-		bool needUpdate;
-		
-		glm::mat4 model;
-		std::vector<glm::mat4> instancing;
+	class Mesh : public IObject3D {
+		private:
+			bool needToUpdate;
 
-		glm::mat4 scaleMat;
-		glm::mat4 rotateMat;
-		glm::mat4 translateMat;
+			std::vector<glm::vec3> position;
+			std::vector<glm::vec3> normal;
+			std::vector<glm::vec2> texCoords;
+			std::vector<glm::vec3> tangent;
+			std::vector<glm::vec3> bitangent;
+			std::vector<glm::vec4> colors;
+			std::vector<unsigned int> index;
 
-		std::vector<glm::vec3> position;
-		std::vector<glm::vec3> normal;
-		std::vector<glm::vec2> texCoords;
-		std::vector<glm::vec3> tangent;
-		std::vector<glm::vec3> bitangent;
-		std::vector<glm::vec4> colors;
-		std::vector<GLuint> index;
+			Material material;
 
-	public:
-		Mesh(Device* device, Mesh *parent = nullptr);
-		virtual ~Mesh();
-		Mesh(const Mesh&) = delete;
-		Mesh& operator=(const Mesh&) = delete;
+		public:
+			Mesh();
+			~Mesh();
+			Mesh(const Mesh& other);
+			Mesh& operator=(const Mesh& other);
 
-		void addChild(Mesh* child);
+			// update member var
+			void setPosition (std::vector<glm::vec3>& position);
+			void setNormal (std::vector<glm::vec3>& normal);
+			void setTexCoords (std::vector<glm::vec2>& texCoords);
+			void setTangent (std::vector<glm::vec3>& tangent);
+			void setBitangent (std::vector<glm::vec3>& bitangent);
+			void setColors (std::vector<glm::vec4>& colors);
+			void setColors (glm::vec4& color);
+			void setIndex (std::vector<unsigned int>& index);
+			void setMaterial (Material& material);
 
-		// update member var
-		void setPosition (std::vector<glm::vec3> &position);
-		void setNormal (std::vector<glm::vec3> &normal);
-		void setTexCoords (std::vector<glm::vec2> &texCoords);
-		void setTangent (std::vector<glm::vec3> &tangent);
-		void setBitangent (std::vector<glm::vec3> &bitangent);
-		void setColors (std::vector<glm::vec4> &colors);
-		void setColors (glm::vec4 &color);
-		void setIndex (std::vector<GLuint> &index);
+			ObjectType getObjectType() override;
 
-		void modelInit();
-		void setInstancing(std::vector<glm::mat4> &instancing);
-		void setScale(glm::vec3 size);
-		void setRotate(float angle, glm::vec3 axis);
-		void setTranslate(glm::vec3 pos);
-		glm::mat4& getModel();
-		MeshDTO getMeshDTO();
+		private:
+			void setVertexData();
+			void makeNormal();
+			void makeTangentSpace();
+	};
 
-		void drawMesh();
-		void drawLine();
-		void drawPoint();
-
-	private:
-		void setVertexData();
-		void makeNormal();
-		void makeTangentSpace();
-		void updateBuffer();
-};
+} // namespace CGL
 
 #endif

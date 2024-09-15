@@ -1,49 +1,80 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
 
-#include "pch.hpp"
+#include "Extern/GLMHeader.hpp"
 
-#include "IResourceID.hpp"
-#include "CommonStructure.hpp"
-#include "CommonEnum.hpp"
-#include "Device.hpp"
+#include "IObject3D.hpp"
 
-class Camera : private IResourceID {
-	private:
-		Device* device;
+namespace CGL {
 
-		ProjectionType projectionType;
-		CenterType centerType;
+	class Camera : public IObject3D {
+		private:
+			glm::mat4 projection;
+			float FoV;
+			int width;
+			int height;
+			float zFar;
+			float zNear;
 
-		glm::mat4 projection;
+			glm::mat4 view;
+			glm::vec3 position;
+			glm::vec3 front;
+			glm::vec3 up;
+			glm::vec3 right;
+			float horizontalAngle;
+			float verticalAngle;
 
-		float zFar;
-		float zNear;
+			float moveSpeed;
+			float mouseSpeed;
 
-		glm::mat4 view;
+		public:
+			Camera() = delete;
+			Camera(
+				glm::vec3 position, // = glm::vec3(0, 0, 0),
+				glm::vec3 front, // = glm::vec3(0, 0, -1),
+				glm::vec3 up, // = glm::vec3(0, 1, 0),
 
-		glm::vec3 position;
-		glm::vec3 up;
-		glm::vec3 right;
-		glm::vec3 front;
+				float FoV = 45.f,
+				int width = 800,
+				int height = 600,
+				float zFar = 1000.f,
+				float zNear = 0.1f,
 
-		int width;
-		int height;
+				float moveSpeed = 10.f,
+				float mouseSpeed = 0.002f
+			);
+			Camera(
+				glm::vec3 position, // = glm::vec3(0, 0, 0),
+				float horizontalAngle, // = -glm::pi<float>(),
+				float verticalAngle, // = 0.f,
 
-		float horizontalAngle;
-		float verticalAngle;
-		float FoV;
+				float FoV = 45.f,
+				int width = 800,
+				int height = 600,
+				float zFar = 1000.f,
+				float zNear = 0.1f,
 
-	public:
-		Camera() = delete;
-		Camera(Device* device, int width, int height, ProjectionType projection_type, CenterType center_type);
-		~Camera();
+				float moveSpeed = 10.f,
+				float mouseSpeed = 0.002f
+			);
+			~Camera();
+			Camera(const Camera& other);
+			Camera& operator=(const Camera& other);
 
-		void update();
+			void rotateView(float angle, glm::vec3 axis);
+			void rotateView(float xDelta, float yDelta);
+			void movePosition(glm::vec3 position);
+			void movePosition(float xOffset, float yOffset, float zOffset);
 
-		CameraDTO getCameraDTO();
+			ObjectType getObjectType() override;
 
-		void updateUniform();
-};
+		private:
+			void update();
+
+			void updateAngleWhenVectorBase();
+			void updateVectorWhenAngleBase();
+	};
+
+} // namespace CGL
 
 #endif

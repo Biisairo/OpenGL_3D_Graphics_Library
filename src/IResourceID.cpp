@@ -1,29 +1,36 @@
 #include "IResourceID.hpp"
 
-std::queue<uint> IResourceID::IDPool;
-uint IResourceID::nextID = 0;
+// ID 0 for None
+std::queue<unsigned int> CGL::IResourceID::IDPool;
+unsigned int CGL::IResourceID::nextID = 1;
 
-IResourceID::IResourceID() {
+CGL::IResourceID::IResourceID() {
 	this->setID();
 }
 
-IResourceID::~IResourceID() {
+CGL::IResourceID::~IResourceID() {
 	this->IDPool.push(this->ID);
 }
 
-IResourceID::IResourceID(const IResourceID&) {
+CGL::IResourceID::IResourceID(const IResourceID& other) {
 	this->setID();
 }
-IResourceID& IResourceID::operator=(const IResourceID&) {
+CGL::IResourceID& CGL::IResourceID::operator=(const IResourceID& other) {
 	this->setID();
 	return *this;
 }
 
-uint IResourceID::getID() {
+
+// public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+unsigned int CGL::IResourceID::getID() {
 	return this->ID;
 }
 
-uint IResourceID::setID() {
+
+// private ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+unsigned int CGL::IResourceID::setID() {
 	if (this->IDPool.size() > 0) {
 		this->ID = this->IDPool.front();
 		this->IDPool.pop();

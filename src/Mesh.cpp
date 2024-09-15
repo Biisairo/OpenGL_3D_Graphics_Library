@@ -1,150 +1,121 @@
 #include "Mesh.hpp"
 
-Mesh::Mesh(Device* device, Mesh *parent) {
-	this->device = device;
-
-	this->modelInit();
-
-	this->parent = parent;
-	if (this->parent != nullptr)
-		this->parent->addChild(this);
-
-    this->needUpdate = false;
+CGL::Mesh::Mesh() {
+	needToUpdate = false;
 }
 
-Mesh::~Mesh() {
-	for (int i = 0; i < this->children.size(); i++) {
-		delete this->children[i];
+CGL::Mesh::~Mesh() {
+	;
+}
+
+CGL::Mesh::Mesh(const CGL::Mesh& other) : IObject3D(other) {
+	this->needToUpdate = other.needToUpdate;
+
+	this->position = other.position;
+	this->normal = other.normal;
+	this->texCoords = other.texCoords;
+	this->tangent = other.tangent;
+	this->bitangent = other.bitangent;
+	this->colors = other.colors;
+	this->index = other.index;
+
+	this->material = other.material;
+}
+
+CGL::Mesh& CGL::Mesh::operator=(const CGL::Mesh& other) {
+	if (this != &other) {
+		CGL:IObject3D::operator=(other);
+
+		this->needToUpdate = other.needToUpdate;
+
+		this->position = other.position;
+		this->normal = other.normal;
+		this->texCoords = other.texCoords;
+		this->tangent = other.tangent;
+		this->bitangent = other.bitangent;
+		this->colors = other.colors;
+		this->index = other.index;
+
+		this->material = other.material;
 	}
 
-	this->device->deleteMesh(this->getID());
+	return *this;
 }
 
-void Mesh::addChild(Mesh* child) {
-	this->children.push_back(child);
-}
 
-void Mesh::setPosition (std::vector<glm::vec3> &position) {
-    this->needUpdate = true;
+// public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void CGL::Mesh::setPosition(std::vector<glm::vec3>& position) {
+    this->needToUpdate = true;
 
 	this->position = position;
 }
 
-void Mesh::setNormal (std::vector<glm::vec3> &normal) {
-    this->needUpdate = true;
+void CGL::Mesh::setNormal(std::vector<glm::vec3>& normal) {
+    this->needToUpdate = true;
 
 	this->normal = normal;
 }
 
-void Mesh::setTexCoords (std::vector<glm::vec2> &texCoords) {
-    this->needUpdate = true;
+void CGL::Mesh::setTexCoords(std::vector<glm::vec2>& texCoords) {
+    this->needToUpdate = true;
 
 	this->texCoords = texCoords;
 }
 
-void Mesh::setTangent (std::vector<glm::vec3> &tangent) {
-    this->needUpdate = true;
+void CGL::Mesh::setTangent(std::vector<glm::vec3>& tangent) {
+    this->needToUpdate = true;
 
 	this->tangent = tangent;
 }
 
-void Mesh::setBitangent (std::vector<glm::vec3> &bitangent) {
-    this->needUpdate = true;
+void CGL::Mesh::setBitangent(std::vector<glm::vec3>& bitangent) {
+    this->needToUpdate = true;
 
 	this->bitangent = bitangent;
 }
 
-void Mesh::setColors (std::vector<glm::vec4> &colors) {
-    this->needUpdate = true;
+void CGL::Mesh::setColors(std::vector<glm::vec4>& colors) {
+    this->needToUpdate = true;
 
 	this->colors = colors;
 }
 
-void Mesh::setColors (glm::vec4 &color) {
-    this->needUpdate = true;
+void CGL::Mesh::setColors(glm::vec4& color) {
+    this->needToUpdate = true;
 
 	this->colors.clear();
 	this->colors.push_back(color);
 }
 
-void Mesh::setIndex (std::vector<GLuint> &index) {
-    this->needUpdate = true;
+void CGL::Mesh::setIndex(std::vector<unsigned int>& index) {
+    this->needToUpdate = true;
 
 	this->index = index;
 }
 
+void CGL::Mesh::setMaterial(CGL::Material& material) {
+	this->needToUpdate = true;
 
-void Mesh::modelInit() {
-	this->model = glm::mat4(1);
-	this->scaleMat = glm::mat4(1);
-	this->rotateMat = glm::mat4(1);
-	this->translateMat = glm::mat4(1);
+	this->material = material;
 }
 
-void Mesh::setInstancing(std::vector<glm::mat4> &instancing) {
-	this->instancing = instancing;
+CGL::ObjectType CGL::Mesh::getObjectType() {
+	return OBJECT_MESH;
 }
 
-void Mesh::setScale(glm::vec3 size) {
-	this->scaleMat = glm::scale(glm::mat4(1), size);
-	this->model = this->translateMat * this->rotateMat * this->scaleMat;
-}
 
-void Mesh::setRotate(float angle, glm::vec3 axis) {
-	this->rotateMat = glm::rotate(glm::mat4(1), angle, axis);
-	this->model = this->translateMat * this->rotateMat * this->scaleMat;
-}
+// private ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Mesh::setTranslate(glm::vec3 pos) {
-	this->translateMat = glm::translate(glm::mat4(1), pos);
-	this->model = this->translateMat * this->rotateMat * this->scaleMat;
-}
+void CGL::Mesh::setVertexData() {
+	if (this->needToUpdate == false)
+		return;
 
-glm::mat4& Mesh::getModel() {
-	return this->model;
-}
+	if (this->position.size() == 0)
+		return;
 
-MeshDTO Mesh::getMeshDTO() {
-    return {
-        this->getID(), 
-        this->position,
-        this->normal,
-        this->texCoords,
-        this->tangent,
-        this->bitangent,
-        this->colors,
-        this->index
-    };
-}
+	this->needToUpdate = false;
 
-void Mesh::drawMesh() {
-    if (this->needUpdate) {
-        this->updateBuffer();
-        this->needUpdate = false;
-    }
-    
-    this->device->draw(this->getID(), this->model, DRAW_TRIANGLES);
-}
-
-void Mesh::drawLine() {
-    if (this->needUpdate) {
-        this->updateBuffer();
-        this->needUpdate = false;
-    }
-    
-    this->device->draw(this->getID(), this->model, DRAW_LINE);
-}
-
-void Mesh::drawPoint() {
-    if (this->needUpdate) {
-        this->updateBuffer();
-        this->needUpdate = false;
-    }
-    
-    this->device->draw(this->getID(), this->model, DRAW_POINT);
-}
-
-void Mesh::setVertexData() {
 	if (this->position.size() != this->normal.size()) {
 		this->makeNormal();
 	}
@@ -158,12 +129,12 @@ void Mesh::setVertexData() {
 		this->makeTangentSpace();
 	}
 
-	if (this->position.size() != this->colors.size() && this->colors.size() == 1) {
+	if (this->position.size() != this->colors.size()) {
 		glm::vec4 color;
-		if (this->colors.size() == 0)
-			color = glm::vec4(1, 1, 1, 1);
-		else
+		if (this->colors.size() == 1)
 			glm::vec4 color = this->colors.front();
+		else
+			color = glm::vec4(1, 1, 1, 1);
 		this->colors.clear();
 		
 		for (int i = 0; i < position.size(); i++)
@@ -171,16 +142,16 @@ void Mesh::setVertexData() {
 	}
 }
 
-void Mesh::makeNormal() {
+void CGL::Mesh::makeNormal() {
     // 정점의 법선을 초기화하고 크기를 설정
     this->normal.resize(this->position.size(), glm::vec3(0.0f));
     std::vector<int> counts(this->position.size(), 0);
 
     // 각 삼각형에 대해 법선을 계산하고 정점에 누적
     for (int i = 0; i < this->index.size() / 3; i++) {
-        uint idx0 = this->index[i * 3 + 0];
-        uint idx1 = this->index[i * 3 + 1];
-        uint idx2 = this->index[i * 3 + 2];
+        unsigned int idx0 = this->index[i * 3 + 0];
+        unsigned int idx1 = this->index[i * 3 + 1];
+        unsigned int idx2 = this->index[i * 3 + 2];
 
         glm::vec3 pos0 = this->position[idx0];
         glm::vec3 pos1 = this->position[idx1];
@@ -211,15 +182,15 @@ void Mesh::makeNormal() {
     }
 }
 
-void Mesh::makeTangentSpace() {
+void CGL::Mesh::makeTangentSpace() {
     this->tangent.resize(this->position.size(), glm::vec3(0.0f));
     this->bitangent.resize(this->position.size(), glm::vec3(0.0f));
     std::vector<int> counts(this->position.size(), 0);
 
     for (int i = 0; i < this->index.size() / 3; i++) {
-        uint idx0 = this->index[i * 3 + 0];
-        uint idx1 = this->index[i * 3 + 1];
-        uint idx2 = this->index[i * 3 + 2];
+        unsigned int idx0 = this->index[i * 3 + 0];
+        unsigned int idx1 = this->index[i * 3 + 1];
+        unsigned int idx2 = this->index[i * 3 + 2];
 
         glm::vec3 pos0 = this->position[idx0];
         glm::vec3 pos1 = this->position[idx1];
@@ -278,12 +249,4 @@ void Mesh::makeTangentSpace() {
             b = glm::normalize(b - glm::dot(b, n) * n - glm::dot(b, t) * t);
         }
     }
-}
-
-void Mesh::updateBuffer() {
-    this->setVertexData();
-
-    this->device->updateMesh(
-        this->getMeshDTO()
-    );
 }
