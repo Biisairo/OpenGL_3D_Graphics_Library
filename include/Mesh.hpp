@@ -8,6 +8,8 @@
 #include "IObject3D.hpp"
 #include "Material.hpp"
 
+using indice = unsigned int;
+
 namespace CGL {
 
 	class Mesh : public IObject3D {
@@ -20,7 +22,7 @@ namespace CGL {
 			std::vector<glm::vec3> tangent;
 			std::vector<glm::vec3> bitangent;
 			std::vector<glm::vec4> colors;
-			std::vector<unsigned int> index;
+			std::vector<indice> index;
 
 			Material material;
 
@@ -38,7 +40,7 @@ namespace CGL {
 			void setBitangent (std::vector<glm::vec3>& bitangent);
 			void setColors (std::vector<glm::vec4>& colors);
 			void setColors (glm::vec4& color);
-			void setIndex (std::vector<unsigned int>& index);
+			void setIndex (std::vector<indice>& index);
 			void setMaterial (Material& material);
 
 			ObjectType getObjectType() override;

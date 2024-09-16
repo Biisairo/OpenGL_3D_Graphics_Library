@@ -34,18 +34,22 @@ namespace CGL {
 			void setParent(IObject3D *parent);
 			IObject3D* getParent();
 			void addChild(IObject3D *child);
-			IObject3D* removeChild(unsigned int ID);
+			IObject3D* findChild(objectID ID);
+			IObject3D* removeChild(objectID ID);
 			std::vector<IObject3D*>& getChildren();
 
 			void initModel();
 
 			void setScale(glm::vec3 scale);
-			void setRotate(float angle, glm::vec3 axis);
+			void addScale(glm::vec3 scale);
+			void setRotate(glm::vec3 axis, float angle);
+			void addRotate(glm::vec3 axis, float angle);
 			void setTranslate(glm::vec3 translate);
+			void addTranslate(glm::vec3 translate);
 
 			glm::mat4& getModel();
 			
-			virtual ObjectType getObjectType() = 0;
+			virtual ObjectType getObjectType();
 		
 		private:
 	};

@@ -44,19 +44,43 @@ CGL::IObject3D* CGL::IObject3D::getParent() {
 }
 
 void CGL::IObject3D::addChild(IObject3D *child) {
+	if (child == nullptr)
+		return;
+		
 	this->children.push_back(child);
+	child->parent = this;
 }
 
-CGL::IObject3D* CGL::IObject3D::removeChild(unsigned int ID) {
+CGL::IObject3D* CGL::IObject3D::findChild(objectID ID) {
+	if (this->getID() == ID)
+		return this;
+	
 	for (std::vector<IObject3D*>::iterator it = this->children.begin(); it != this->children.end(); it++) {
-		if ((*it)->getID() == ID) {
-			CGL::IObject3D* curIObject3D = *it;
-			this->children.erase(it);
-			return curIObject3D;
-		}
+		CGL::IObject3D* res = (*it)->findChild(ID);
+
+		if (res)
+			return res;
 	}
 
 	return nullptr;
+}
+
+CGL::IObject3D* CGL::IObject3D::removeChild(objectID ID) {
+	if (this->getID() == ID)
+		return this;
+
+	CGL::IObject3D* target = this->findChild(ID);
+	if (target == nullptr)
+		return nullptr;
+	
+	CGL::IObject3D* targetParent = target->parent;
+	for (std::vector<IObject3D*>::iterator it = targetParent->children.begin(); it != targetParent->children.end(); it++) {
+		if (*it == target) {
+			targetParent->children.erase(it);
+		}
+	}
+	
+	return target;
 }
 
 std::vector<CGL::IObject3D*>& CGL::IObject3D::getChildren() {
@@ -76,8 +100,20 @@ void CGL::IObject3D::setScale(glm::vec3 size) {
 	this->model = this->translate * this->rotate * this->scale;
 }
 
-void CGL::IObject3D::setRotate(float angle, glm::vec3 axis) {
+void CGL::IObject3D::addScale(glm::vec3 size) {
+	glm::mat4 scaleDelta = glm::scale(glm::mat4(1), size);
+	this->scale = scaleDelta * this->scale;
+	this->model = this->translate * this->rotate * this->scale;
+}
+
+void CGL::IObject3D::setRotate(glm::vec3 axis, float angle) {
 	this->rotate = glm::rotate(glm::mat4(1), angle, axis);
+	this->model = this->translate * this->rotate * this->scale;
+}
+
+void CGL::IObject3D::addRotate(glm::vec3 axis, float angle) {
+	glm::mat4 rotateDelta = glm::rotate(glm::mat4(1), angle, axis);
+	this->rotate = rotateDelta * this->rotate;
 	this->model = this->translate * this->rotate * this->scale;
 }
 
@@ -86,8 +122,18 @@ void CGL::IObject3D::setTranslate(glm::vec3 pos) {
 	this->model = this->translate * this->rotate * this->scale;
 }
 
+void CGL::IObject3D::addTranslate(glm::vec3 pos) {
+	glm::mat4 translateDelta = glm::translate(glm::mat4(1), pos);
+	this->translate = translateDelta * this->translate;
+	this->model = this->translate * this->rotate * this->scale;
+}
+
 glm::mat4& CGL::IObject3D::getModel() {
 	return this->model;
+}
+
+CGL::ObjectType CGL::IObject3D::getObjectType() {
+	return OBJECT_NONE;
 }
 
 

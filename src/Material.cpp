@@ -59,19 +59,19 @@ float CGL::Material::getShininess() {
 	return this->shininess;
 }
 
-// unsigned int CGL::Material::getDiffuseMap() {
+// objectID CGL::Material::getDiffuseMap() {
 // 	return this->diffuseMapID;
 // }
 
-// unsigned int CGL::Material::getSpecularMap() {
+// objectID CGL::Material::getSpecularMap() {
 // 	return this->specularMapID;
 // }
 
-// unsigned int CGL::Material::getNormalMap() {
+// objectID CGL::Material::getNormalMap() {
 // 	return this->normalMapID;
 // }
 
-// unsigned int CGL::Material::getHeightMap() {
+// objectID CGL::Material::getHeightMap() {
 // 	return this->heightMapID;
 // }
 
@@ -93,19 +93,19 @@ void CGL::Material::setShininess(float shininess) {
 	this->shininess = shininess;
 }
 
-// void CGL::Material::setDiffuseMap(unsigned int ID) {
+// void CGL::Material::setDiffuseMap(objectID ID) {
 // 	this->diffuseMapID = ID;
 // }
 
-// void CGL::Material::setSpecularMap(unsigned int ID) {
+// void CGL::Material::setSpecularMap(objectID ID) {
 // 	this->specularMapID = ID;
 // }
 
-// void CGL::Material::setNormalMap(unsigned int ID) {
+// void CGL::Material::setNormalMap(objectID ID) {
 // 	this->normalMapID = ID;
 // }
 
-// void CGL::Material::setHeightMap(unsigned int ID) {
+// void CGL::Material::setHeightMap(objectID ID) {
 // 	this->heightMapID = ID;
 // }
 

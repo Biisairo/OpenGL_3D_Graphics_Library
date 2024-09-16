@@ -109,7 +109,11 @@ CGL::Camera& CGL::Camera::operator=(const Camera& other) {
 
 // public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CGL::Camera::rotateView(float angle, glm::vec3 axis) {
+void CGL::Camera::setViewRotate(glm::vec3 front) {
+
+}
+
+void CGL::Camera::addViewRotate(glm::vec3 axis, float angle) {
 	glm::mat4 rotate = glm::rotate(glm::mat4(1), angle, axis);
 	this->front = glm::normalize(rotate * glm::vec4(this->front, 0));
 	this->right = glm::normalize(rotate * glm::vec4(this->right, 0));
@@ -118,29 +122,53 @@ void CGL::Camera::rotateView(float angle, glm::vec3 axis) {
     this->updateAngleWhenVectorBase();
 
 	this->update();
+
+	this->addRotate(axis, angle);
 }
 
-void CGL::Camera::rotateView(float xDelta, float yDelta) {
+void CGL::Camera::addViewRotate(float xDelta, float yDelta) {
     horizontalAngle += xDelta * this->mouseSpeed;
     verticalAngle -= yDelta * this->mouseSpeed;
 
     this->updateVectorWhenAngleBase();
 
 	this->update();
+
+    float yawAngle = xDelta * this->mouseSpeed;
+    glm::vec3 yawAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    float pitchAngle = yDelta * this->mouseSpeed;
+    glm::vec3 pitchAxis = this->right;
+
+	glm::vec3 axis = glm::normalize(yawAxis + pitchAxis);
+    float angle = glm::length(glm::vec2(yawAngle, pitchAngle));
+	this->addRotate(axis, angle);
 }
 
-void CGL::Camera::movePosition(glm::vec3 position) {
+void CGL::Camera::setViewPosition(glm::vec3 position) {
 	this->position = position;
 
 	this->update();
+
+	this->setTranslate(position);
 }
 
-void CGL::Camera::movePosition(float xOffset, float yOffset, float zOffset) {
+void CGL::Camera::addViewPosition(glm::vec3 move) {
+	this->position += move;
+
+	this->update();
+
+	this->addTranslate(move);
+}
+
+void CGL::Camera::addViewPosition(float xOffset, float yOffset, float zOffset) {
 	this->position += this->front * zOffset * this->moveSpeed;
 	this->position += this->right * xOffset * this->moveSpeed;
 	this->position += this->up * yOffset * this->moveSpeed;
 
 	this->update();
+
+	this->addTranslate(glm::vec3(xOffset * this->moveSpeed, yOffset * this->moveSpeed, zOffset * this->moveSpeed));
 }
 
 CGL::ObjectType CGL::Camera::getObjectType() {

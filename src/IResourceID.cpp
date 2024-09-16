@@ -1,8 +1,8 @@
 #include "IResourceID.hpp"
 
 // ID 0 for None
-std::queue<unsigned int> CGL::IResourceID::IDPool;
-unsigned int CGL::IResourceID::nextID = 1;
+std::queue<objectID> CGL::IResourceID::IDPool;
+objectID CGL::IResourceID::nextID = 1;
 
 CGL::IResourceID::IResourceID() {
 	this->setID();
@@ -23,14 +23,14 @@ CGL::IResourceID& CGL::IResourceID::operator=(const IResourceID& other) {
 
 // public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-unsigned int CGL::IResourceID::getID() {
+objectID CGL::IResourceID::getID() {
 	return this->ID;
 }
 
 
 // private ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-unsigned int CGL::IResourceID::setID() {
+objectID CGL::IResourceID::setID() {
 	if (this->IDPool.size() > 0) {
 		this->ID = this->IDPool.front();
 		this->IDPool.pop();

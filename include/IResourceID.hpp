@@ -3,13 +3,15 @@
 
 #include <queue>
 
+using objectID = unsigned int;
+
 namespace CGL {
 
 	class IResourceID {
 		private:
-			static std::queue<unsigned int> IDPool;
-			static unsigned int nextID;
-			unsigned int ID;
+			static std::queue<objectID> IDPool;
+			static objectID nextID;
+			objectID ID;
 		
 		public:
 			IResourceID();
@@ -17,10 +19,10 @@ namespace CGL {
 			IResourceID(const IResourceID& other);
 			IResourceID& operator=(const IResourceID& other);
 
-			unsigned int getID();
+			objectID getID();
 
 		private:
-			unsigned int setID();
+			objectID setID();
 	};
 
 } // namespace CGL

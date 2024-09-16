@@ -12,10 +12,10 @@ namespace CGL {
 			glm::vec3 specular;
 			float shininess;
 
-			// unsigned int diffuseMapID;
-			// unsigned int specularMapID;
-			// unsigned int normalMapID;
-			// unsigned int heightMapID;
+			// objectID diffuseMapID;
+			// objectID specularMapID;
+			// objectID normalMapID;
+			// objectID heightMapID;
 
 		public:
 			Material();
@@ -28,20 +28,20 @@ namespace CGL {
 			glm::vec3 getDiffuse();
 			glm::vec3 getSpecular();
 			float getShininess();
-			// unsigned int getDiffuseMap();
-			// unsigned int getSpecularMap();
-			// unsigned int getNormalMap();
-			// unsigned int getHeightMap();
+			// objectID getDiffuseMap();
+			// objectID getSpecularMap();
+			// objectID getNormalMap();
+			// objectID getHeightMap();
 
 			// setter
 			void setAmbient(glm::vec3 ambient);
 			void setDiffuse(glm::vec3 diffuse);
 			void setSpecular(glm::vec3 specular);
 			void setShininess(float shininess);
-			// void setDiffuseMap(unsigned int ID);
-			// void setSpecularMap(unsigned int ID);
-			// void setNormalMap(unsigned int ID);
-			// void setHeightMap(unsigned int ID);
+			// void setDiffuseMap(objectID ID);
+			// void setSpecularMap(objectID ID);
+			// void setNormalMap(objectID ID);
+			// void setHeightMap(objectID ID);
 	};
 
 } // namespace CGL

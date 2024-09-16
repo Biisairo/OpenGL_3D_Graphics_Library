@@ -61,10 +61,12 @@ namespace CGL {
 			Camera(const Camera& other);
 			Camera& operator=(const Camera& other);
 
-			void rotateView(float angle, glm::vec3 axis);
-			void rotateView(float xDelta, float yDelta);
-			void movePosition(glm::vec3 position);
-			void movePosition(float xOffset, float yOffset, float zOffset);
+			void setViewRotate(glm::vec3 front);
+			void addViewRotate(glm::vec3 axis, float angle);
+			void addViewRotate(float xDelta, float yDelta);
+			void setViewPosition(glm::vec3 position);
+			void addViewPosition(glm::vec3 move);
+			void addViewPosition(float xOffset, float yOffset, float zOffset);
 
 			ObjectType getObjectType() override;
 

@@ -88,7 +88,7 @@ void CGL::Mesh::setColors(glm::vec4& color) {
 	this->colors.push_back(color);
 }
 
-void CGL::Mesh::setIndex(std::vector<unsigned int>& index) {
+void CGL::Mesh::setIndex(std::vector<indice>& index) {
     this->needToUpdate = true;
 
 	this->index = index;
@@ -149,9 +149,9 @@ void CGL::Mesh::makeNormal() {
 
     // 각 삼각형에 대해 법선을 계산하고 정점에 누적
     for (int i = 0; i < this->index.size() / 3; i++) {
-        unsigned int idx0 = this->index[i * 3 + 0];
-        unsigned int idx1 = this->index[i * 3 + 1];
-        unsigned int idx2 = this->index[i * 3 + 2];
+        indice idx0 = this->index[i * 3 + 0];
+        indice idx1 = this->index[i * 3 + 1];
+        indice idx2 = this->index[i * 3 + 2];
 
         glm::vec3 pos0 = this->position[idx0];
         glm::vec3 pos1 = this->position[idx1];
@@ -188,9 +188,9 @@ void CGL::Mesh::makeTangentSpace() {
     std::vector<int> counts(this->position.size(), 0);
 
     for (int i = 0; i < this->index.size() / 3; i++) {
-        unsigned int idx0 = this->index[i * 3 + 0];
-        unsigned int idx1 = this->index[i * 3 + 1];
-        unsigned int idx2 = this->index[i * 3 + 2];
+        indice idx0 = this->index[i * 3 + 0];
+        indice idx1 = this->index[i * 3 + 1];
+        indice idx2 = this->index[i * 3 + 2];
 
         glm::vec3 pos0 = this->position[idx0];
         glm::vec3 pos1 = this->position[idx1];
