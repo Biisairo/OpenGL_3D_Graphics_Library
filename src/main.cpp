@@ -35,7 +35,6 @@ int main() {
 		cor->setColors(colors);
 		cor->setDrawType(CGL::DRAW_POINTS);
 	}
-
 	CGL::Mesh* floar = new CGL::Mesh();
 	{
 		std::vector<glm::vec3> vertex;
@@ -134,61 +133,63 @@ int main() {
 		head1->setDrawType(CGL::DRAW_TRIANGLES);
 		// head1->setScale(glm::vec3(1, 1, 1));
 		// head1->setTranslate(glm::vec3(0, 2, 0));
-	}
-	CGL::Mesh* body1 = new CGL::Mesh();
-	{
-		std::vector<glm::vec3> vertex;
-		vertex.push_back(glm::vec3(1, 1, 1));
-		vertex.push_back(glm::vec3(-1, 1, 1));
-		vertex.push_back(glm::vec3(1, -1, 1));
-		vertex.push_back(glm::vec3(-1, -1, 1));
-		vertex.push_back(glm::vec3(1, 1, -1));
-		vertex.push_back(glm::vec3(-1, 1, -1));
-		vertex.push_back(glm::vec3(1, -1, -1));
-		vertex.push_back(glm::vec3(-1, -1, -1));
+		CGL::Mesh* body1 = new CGL::Mesh();
+		{
+			std::vector<glm::vec3> vertex;
+			vertex.push_back(glm::vec3(1, 1, 1));
+			vertex.push_back(glm::vec3(-1, 1, 1));
+			vertex.push_back(glm::vec3(1, -1, 1));
+			vertex.push_back(glm::vec3(-1, -1, 1));
+			vertex.push_back(glm::vec3(1, 1, -1));
+			vertex.push_back(glm::vec3(-1, 1, -1));
+			vertex.push_back(glm::vec3(1, -1, -1));
+			vertex.push_back(glm::vec3(-1, -1, -1));
 
-		std::vector<indice> index = {
-			// 앞면
-			0, 1, 2,
-			1, 3, 2,
+			std::vector<indice> index = {
+				// 앞면
+				0, 1, 2,
+				1, 3, 2,
 
-			// 뒷면
-			4, 6, 5,
-			5, 6, 7,
+				// 뒷면
+				4, 6, 5,
+				5, 6, 7,
 
-			// 왼쪽 면
-			1, 5, 3,
-			5, 7, 3,
+				// 왼쪽 면
+				1, 5, 3,
+				5, 7, 3,
 
-			// 오른쪽 면
-			0, 2, 4,
-			4, 2, 6,
+				// 오른쪽 면
+				0, 2, 4,
+				4, 2, 6,
 
-			// 윗면
-			0, 4, 1,
-			1, 4, 5,
+				// 윗면
+				0, 4, 1,
+				1, 4, 5,
 
-			// 아랫면
-			2, 3, 6,
-			3, 7, 6
-		};
-		body1->setPosition(vertex);
-		body1->setIndex(index);
-		std::vector<glm::vec4> colors;
+				// 아랫면
+				2, 3, 6,
+				3, 7, 6
+			};
+			body1->setPosition(vertex);
+			body1->setIndex(index);
+			std::vector<glm::vec4> colors;
 
-		colors.push_back(glm::vec4(0, 0.5, 0, 1));
-		colors.push_back(glm::vec4(0, 0.5, 0, 1));
-		colors.push_back(glm::vec4(0, 0.5, 0, 1));
-		colors.push_back(glm::vec4(0, 0.5, 0, 1));
-		colors.push_back(glm::vec4(0, 1, 0, 1));
-		colors.push_back(glm::vec4(0, 1, 0, 1));
-		colors.push_back(glm::vec4(0, 1, 0, 1));
-		colors.push_back(glm::vec4(0, 1, 0, 1));
+			colors.push_back(glm::vec4(0, 0.5, 0, 1));
+			colors.push_back(glm::vec4(0, 0.5, 0, 1));
+			colors.push_back(glm::vec4(0, 0.5, 0, 1));
+			colors.push_back(glm::vec4(0, 0.5, 0, 1));
+			colors.push_back(glm::vec4(0, 1, 0, 1));
+			colors.push_back(glm::vec4(0, 1, 0, 1));
+			colors.push_back(glm::vec4(0, 1, 0, 1));
+			colors.push_back(glm::vec4(0, 1, 0, 1));
 
-		body1->setColors(colors);
-		body1->setDrawType(CGL::DRAW_TRIANGLES);
-		body1->setScale(glm::vec3(1, 2, 0.5));
-		body1->setTranslate(glm::vec3(0, -3, 0));
+			body1->setColors(colors);
+			body1->setDrawType(CGL::DRAW_TRIANGLES);
+			body1->setScale(glm::vec3(1, 2, 0.5));
+			body1->setTranslate(glm::vec3(0, -3, 0));
+		}
+
+		head1->addChild(body1);
 	}
 	CGL::Mesh* head2 = new CGL::Mesh();
 	{
@@ -302,7 +303,7 @@ int main() {
 	}
 	CGL::Light* sun = new CGL::Light();
 	{
-		sun->setLightType(CGL::LIGHT_DIRECTIONAL);
+		sun->setLightType(CGL::LIGHT_POINT);
 		sun->setAmbientStrength(1);
 		sun->setDiffuseStrength(1);
 		sun->setSpecularStrength(1);
@@ -317,49 +318,52 @@ int main() {
 		sun->setEmitDirection(glm::vec4(0, -1, 0, 1));
 		sun->setInnerCutoff(glm::radians(30.f));
 		sun->setOuterCutoff(glm::radians(45.f));
-	}
-	CGL::Mesh* lightBox = new CGL::Mesh();
-	{
-		std::vector<glm::vec3> vertex;
-		vertex.push_back(glm::vec3(1, 1, 1));
-		vertex.push_back(glm::vec3(-1, 1, 1));
-		vertex.push_back(glm::vec3(1, -1, 1));
-		vertex.push_back(glm::vec3(-1, -1, 1));
-		vertex.push_back(glm::vec3(1, 1, -1));
-		vertex.push_back(glm::vec3(-1, 1, -1));
-		vertex.push_back(glm::vec3(1, -1, -1));
-		vertex.push_back(glm::vec3(-1, -1, -1));
 
-		std::vector<indice> index = {
-			// 앞면
-			0, 1, 2,
-			1, 3, 2,
+		CGL::Mesh* lightBox = new CGL::Mesh();
+		{
+			std::vector<glm::vec3> vertex;
+			vertex.push_back(glm::vec3(1, 1, 1));
+			vertex.push_back(glm::vec3(-1, 1, 1));
+			vertex.push_back(glm::vec3(1, -1, 1));
+			vertex.push_back(glm::vec3(-1, -1, 1));
+			vertex.push_back(glm::vec3(1, 1, -1));
+			vertex.push_back(glm::vec3(-1, 1, -1));
+			vertex.push_back(glm::vec3(1, -1, -1));
+			vertex.push_back(glm::vec3(-1, -1, -1));
 
-			// 뒷면
-			4, 6, 5,
-			5, 6, 7,
+			std::vector<indice> index = {
+				// 앞면
+				0, 1, 2,
+				1, 3, 2,
 
-			// 왼쪽 면
-			1, 5, 3,
-			5, 7, 3,
+				// 뒷면
+				4, 6, 5,
+				5, 6, 7,
 
-			// 오른쪽 면
-			0, 2, 4,
-			4, 2, 6,
+				// 왼쪽 면
+				1, 5, 3,
+				5, 7, 3,
 
-			// 윗면
-			0, 4, 1,
-			1, 4, 5,
+				// 오른쪽 면
+				0, 2, 4,
+				4, 2, 6,
 
-			// 아랫면
-			2, 3, 6,
-			3, 7, 6
-		};
-		lightBox->setPosition(vertex);
-		lightBox->setIndex(index);
-		lightBox->setColors(sun->getSpecularcolor());
-		lightBox->setDrawType(CGL::DRAW_TRIANGLES);
-		lightBox->setScale(glm::vec3(0.1, 0.1, 0.1));
+				// 윗면
+				0, 4, 1,
+				1, 4, 5,
+
+				// 아랫면
+				2, 3, 6,
+				3, 7, 6
+			};
+			lightBox->setPosition(vertex);
+			lightBox->setIndex(index);
+			lightBox->setColors(sun->getSpecularcolor());
+			lightBox->setDrawType(CGL::DRAW_TRIANGLES);
+			lightBox->setScale(glm::vec3(0.1, 0.1, 0.1));
+		}
+
+		sun->addChild(lightBox);
 	}
 	CGL::Camera* camera1 = new CGL::Camera(glm::vec3(), glm::radians(180.f), 0, glm::radians(45.f), width, height);
 	camera1->setViewPosition(glm::vec3(10, 10, 10));
@@ -369,13 +373,11 @@ int main() {
 
 	scene.addObject(cor);
 	scene.addObject(sun);
-	sun->addChild(lightBox);
 	scene.addObject(floar);
 	scene.addObject(box);
 	scene.addObject(camera1);
 	scene.addObject(camera2);
 	camera1->addChild(head1);
-	head1->addChild(body1);
 	camera2->addChild(head2);
 	scene.setMainCamera(camera1);
 
