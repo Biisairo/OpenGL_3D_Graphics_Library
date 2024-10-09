@@ -11,6 +11,7 @@ CGL::Material::Material(const Material& other) {
 	this->ambientColor = other.ambientColor;
 	this->diffuseColor = other.diffuseColor;
 	this->specularColor = other.specularColor;
+	this->alpha = other.alpha;
 	this->shininess = other.shininess;
 }
 
@@ -19,6 +20,7 @@ CGL::Material& CGL::Material::operator=(const Material& other) {
 		this->ambientColor = other.ambientColor;
 		this->diffuseColor = other.diffuseColor;
 		this->specularColor = other.specularColor;
+		this->alpha = other.alpha;
 		this->shininess = other.shininess;
 	}
 
