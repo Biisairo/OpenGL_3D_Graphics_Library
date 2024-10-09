@@ -46,6 +46,15 @@ namespace CGL {
 	};
 
 	// struct
+	struct MaterialBuffer {
+		glm::vec4 ambientColor;
+		glm::vec4 diffuseColor;
+		glm::vec4 specularColor;
+
+		float alpha;
+		float shininess;
+	};
+
 	struct MeshBuffer {
 		GLuint VAO;
 		GLuint VBO;
@@ -53,6 +62,7 @@ namespace CGL {
 		unsigned int count;
 		programHash program;
 		DrawType drawType;
+		MaterialBuffer materialBuffer;
 	};
 
 	struct LightBuffer {
@@ -147,7 +157,12 @@ namespace CGL {
 				std::vector<glm::vec3> bitangent,
 				std::vector<glm::vec4> colors,
 				std::vector<uint> index,
-				CGL::DrawType drawType
+				CGL::DrawType drawType,
+				glm::vec4 ambientColor,
+				glm::vec4 diffuseColor,
+				glm::vec4 specularColor,
+				float alpha,
+				float shininess
 			);
 			// void updateMesh(texture);
 			void deleteMesh(objectID ID);

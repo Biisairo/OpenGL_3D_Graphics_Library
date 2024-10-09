@@ -116,6 +116,7 @@ void CGL::Device::render(CGL::Scene* scene) {
 	std::vector<GLuint> programs = this->getAllPrograms();
 	this->addUniformBlock("Matrices", programs);
 	this->addUniformBlock("Lights", programs);
+	this->addUniformBlock("Material", programs);
 
 	CGL::Camera* camera = scene->getMainCamera();
 	this->registerCamera(camera);
@@ -168,7 +169,12 @@ void CGL::Device::recursiveRegisterMesh(CGL::IObject3D* object) {
 				mesh->getBitangent(),
 				mesh->getColors(),
 				mesh->getIndex(),
-				mesh->getDrawType()
+				mesh->getDrawType(),
+				mesh->material.getAmbientColor(),
+				mesh->material.getDiffuseColor(),
+				mesh->material.getSpecularColor(),
+				mesh->material.getAlpha(),
+				mesh->material.getShininess()
 			);
 
 			mesh->updateDone();
@@ -192,8 +198,8 @@ void CGL::Device::registerLight(LightBuffers& lightBuffers) {
 
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(uint), &(lightBuffers.lightCount));
 
-	// if (lightBuffers.lightCount != 0)
-	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(uint) * 4, sizeof(CGL::LightBuffer) * lightBuffers.lightCount, lightBuffers.light.data());
+	if (lightBuffers.lightCount != 0)
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(uint) * 4, sizeof(CGL::LightBuffer) * lightBuffers.lightCount, lightBuffers.light.data());
 
 	this->unuseUniformBlock();
 
@@ -272,7 +278,12 @@ void CGL::Device::updateMesh(
 	std::vector<glm::vec3> bitangent,
 	std::vector<glm::vec4> colors,
 	std::vector<uint> index,
-	CGL::DrawType drawType
+	CGL::DrawType drawType,
+	glm::vec4 ambientColor,
+	glm::vec4 diffuseColor,
+	glm::vec4 specularColor,
+	float alpha,
+	float shininess
 ) {
 	this->deleteMesh(ID);
 
@@ -383,6 +394,12 @@ void CGL::Device::updateMesh(
 	meshBuffer.program = program;
 	meshBuffer.drawType = drawType;
 
+	meshBuffer.materialBuffer.ambientColor = ambientColor;
+	meshBuffer.materialBuffer.diffuseColor = diffuseColor;
+	meshBuffer.materialBuffer.specularColor = specularColor;
+	meshBuffer.materialBuffer.alpha = alpha;
+	meshBuffer.materialBuffer.shininess = shininess;
+
 	this->meshes.insert(std::make_pair(ID, meshBuffer));
 
 	this->getError();
@@ -417,6 +434,22 @@ void CGL::Device::draw(objectID ID, glm::mat4 model) {
 				glDrawType = GL_POINTS;
 				break;
 		}
+
+		this->useUniformBlock("Material");
+
+		GLuint index = getBindingIndex("Material");
+
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 3 + sizeof(float) * 4, NULL, GL_STATIC_DRAW);
+
+		glBindBufferRange(GL_UNIFORM_BUFFER, index, this->getUniformBlockBuffer("Material"), 0, sizeof(glm::vec4) * 3 + sizeof(float) * 4);
+
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), glm::value_ptr(meshes[ID].materialBuffer.ambientColor));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4), sizeof(glm::vec4), glm::value_ptr(meshes[ID].materialBuffer.diffuseColor));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 2, sizeof(glm::vec4), glm::value_ptr(meshes[ID].materialBuffer.specularColor));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 3, sizeof(float), &(meshes[ID].materialBuffer.alpha));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 3 + sizeof(float), sizeof(float), &(meshes[ID].materialBuffer.shininess));
+
+		this->unuseUniformBlock();
 
 		this->useProgram(this->meshes[ID].program);
 		this->setMat4(this->meshes[ID].program, "MODEL", model);

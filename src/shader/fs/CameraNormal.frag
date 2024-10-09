@@ -27,6 +27,15 @@ layout (std140) uniform Lights
 	Light LIGHT[MAX_LIGHT_COUNT];
 };
 
+layout (std140) uniform Material
+{
+    vec4 AMBIENTCOLOR;
+    vec4 DIFFUSECOLOR;
+    vec4 SPECULARCOLOR;
+    float ALPHA;
+    float SHININESS;
+};
+
 in Camera_VS_OUT {
 	vec4 VertexColor;
 
@@ -100,12 +109,12 @@ vec4 computeLight(Light light, TangentSpace tangentSpace) {
 
     vec3 viewDir = normalize(tangentSpace.viewPos - tangentSpace.fragPos);
     vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32); // 물체의 shininess 특성 사용
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), SHININESS); // 물체의 shininess 특성 사용
 
     lightColor += attenuation * (
-        light.ambientStrength * light.ambientcolor +
-        diffuseStrength * light.diffuseStrength * light.diffusecolor +
-        spec * light.specularStrength * light.specularcolor
+        light.ambientStrength * light.ambientcolor * AMBIENTCOLOR+
+        diffuseStrength * light.diffuseStrength * light.diffusecolor  * DIFFUSECOLOR +
+        spec * light.specularStrength * light.specularcolor * SPECULARCOLOR
     );
 
     return lightColor; // 최종 조명 색상 반환
@@ -199,5 +208,5 @@ void main(){
     }
     #endif
     
-    FragColor = vec4(fragColor * lightColorSum.xyz, fs_in.VertexColor.w);
+    FragColor = vec4(fragColor * lightColorSum.xyz, ALPHA);
 }

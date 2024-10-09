@@ -65,13 +65,13 @@ void CGL::Light::setDiffuseStrength(float diffuseStrength) {
 void CGL::Light::setSpecularStrength(float specularStrength) {
 	this->specularStrength = specularStrength;
 }
-void CGL::Light::setAmbientcolor(glm::vec4 ambientcolor) {
+void CGL::Light::setAmbientcolor(glm::vec3 ambientcolor) {
 	this->ambientcolor = ambientcolor;
 }
-void CGL::Light::setDiffusecolor(glm::vec4 diffusecolor) {
+void CGL::Light::setDiffusecolor(glm::vec3 diffusecolor) {
 	this->diffusecolor = diffusecolor;
 }
-void CGL::Light::setSpecularcolor(glm::vec4 specularcolor) {
+void CGL::Light::setSpecularcolor(glm::vec3 specularcolor) {
 	this->specularcolor = specularcolor;
 }
 void CGL::Light::setIntensity(float intensity) {
@@ -86,12 +86,12 @@ void CGL::Light::setLinearAttenuation(float linearAttenuation) {
 void CGL::Light::setQuadraticAttenuation(float quadraticAttenuation) {
 	this->quadraticAttenuation = quadraticAttenuation;
 }
-void CGL::Light::setPosition(glm::vec4 position) {
+void CGL::Light::setPosition(glm::vec3 position) {
 	this->position = position;
 
 	this->setTranslate(position);
 }
-void CGL::Light::setEmitDirection(glm::vec4 emitDirection) {
+void CGL::Light::setEmitDirection(glm::vec3 emitDirection) {
 	this->emitDirection = emitDirection;
 }
 void CGL::Light::setInnerCutoff(float innerCutoff) {
@@ -114,13 +114,13 @@ float CGL::Light::getSpecularStrength() {
 	return this->specularStrength;
 }
 glm::vec4 CGL::Light::getAmbientcolor() {
-	return this->ambientcolor;
+	return glm::vec4(this->ambientcolor, 1);
 }
 glm::vec4 CGL::Light::getDiffusecolor() {
-	return this->diffusecolor;
+	return glm::vec4(this->diffusecolor, 1);
 }
 glm::vec4 CGL::Light::getSpecularcolor() {
-	return this->specularcolor;
+	return glm::vec4(this->specularcolor, 1);
 }
 float CGL::Light::getIntensity() {
 	return this->intensity;
@@ -135,10 +135,10 @@ float CGL::Light::getQuadraticAttenuation() {
 	return this->quadraticAttenuation;
 }
 glm::vec4 CGL::Light::getPosition() {
-	return this->position;
+	return glm::vec4(this->position, 1);
 }
 glm::vec4 CGL::Light::getEmitDirection() {
-	return this->emitDirection;
+	return glm::vec4(this->emitDirection, 0);
 }
 float CGL::Light::getInnerCutoff() {
 	return this->innerCutoff;

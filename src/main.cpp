@@ -5,6 +5,7 @@
 #include "Camera.hpp"
 #include "Light.hpp"
 #include "Device.hpp"
+#include "Material.hpp"
 
 int main() {
 	int width = 500;
@@ -232,10 +233,10 @@ int main() {
 		head2->setIndex(index);
 		std::vector<glm::vec4> colors;
 
-		colors.push_back(glm::vec4(0.5, 0.5, 1, 1));
-		colors.push_back(glm::vec4(0.5, 0.5, 1, 1));
-		colors.push_back(glm::vec4(0.5, 0.5, 1, 1));
-		colors.push_back(glm::vec4(0.5, 0.5, 1, 1));
+		colors.push_back(glm::vec4(0.5, 0.5, 0.5, 1));
+		colors.push_back(glm::vec4(0.5, 0.5, 0.5, 1));
+		colors.push_back(glm::vec4(0.5, 0.5, 0.5, 1));
+		colors.push_back(glm::vec4(0.5, 0.5, 0.5, 1));
 		colors.push_back(glm::vec4(1, 1, 1, 1));
 		colors.push_back(glm::vec4(1, 1, 1, 1));
 		colors.push_back(glm::vec4(1, 1, 1, 1));
@@ -245,6 +246,13 @@ int main() {
 		head2->setDrawType(CGL::DRAW_TRIANGLES);
 		// head2->setScale(glm::vec3(1, 1, 1));
 		// head2->setTranslate(glm::vec3(0, 2, 0));
+				CGL::Material material;
+		material.setAmbientColor(glm::vec3(0, 0, 0.5));
+		material.setDiffuseColor(glm::vec3(0, 0.5, 0));
+		material.setDiffuseColor(glm::vec3(0, 1, 0));
+		material.setAlpha(1);
+		material.setShininess(16);
+		head2->material = material;
 	}
 	CGL::Mesh* box = new CGL::Mesh();
 	{
@@ -285,21 +293,18 @@ int main() {
 		};
 		box->setPosition(vertex);
 		box->setIndex(index);
-		std::vector<glm::vec4> colors;
-
-		colors.push_back(glm::vec4(1, 0, 1, 1));
-		colors.push_back(glm::vec4(1, 0, 1, 1));
-		colors.push_back(glm::vec4(1, 0, 1, 1));
-		colors.push_back(glm::vec4(1, 0, 1, 1));
-		colors.push_back(glm::vec4(1, 0, 1, 1));
-		colors.push_back(glm::vec4(1, 0, 1, 1));
-		colors.push_back(glm::vec4(1, 0, 1, 1));
-		colors.push_back(glm::vec4(1, 0, 1, 1));
-
-		box->setColors(colors);
+		box->setColors(glm::vec4(1, 1, 1, 1));
 		box->setDrawType(CGL::DRAW_TRIANGLES);
 		box->setScale(glm::vec3(0.5, 0.5, 0.5));
-		box->setTranslate(glm::vec3(0, 0, -3));
+		box->setTranslate(glm::vec3(0, 0, -10));
+
+		CGL::Material material;
+		material.setAmbientColor(glm::vec3(0, 0, 0.5));
+		material.setDiffuseColor(glm::vec3(0, 0.5, 0));
+		material.setDiffuseColor(glm::vec3(0, 1, 0));
+		material.setAlpha(1);
+		material.setShininess(16);
+		box->material = material;
 	}
 	CGL::Light* sun = new CGL::Light();
 	{
@@ -307,15 +312,15 @@ int main() {
 		sun->setAmbientStrength(1);
 		sun->setDiffuseStrength(1);
 		sun->setSpecularStrength(1);
-		sun->setAmbientcolor(glm::vec4(1, 0.3, 0.2, 1));
-		sun->setDiffusecolor(glm::vec4(1, 0.5, 0.5, 1));
-		sun->setSpecularcolor(glm::vec4(1, 0.7, 0.6, 1));
+		sun->setAmbientcolor(glm::vec3(1, 1, 1));
+		sun->setDiffusecolor(glm::vec3(1, 1, 1));
+		sun->setSpecularcolor(glm::vec3(1, 1, 1));
 		sun->setIntensity(1);
 		sun->setConstantAttenuation(0.01);
 		sun->setLinearAttenuation(0.01);
 		sun->setQuadraticAttenuation(0.01);
-		sun->setPosition(glm::vec4(0, 5, 0, 1));
-		sun->setEmitDirection(glm::vec4(0, -1, 0, 1));
+		sun->setPosition(glm::vec3(0, 5, 0));
+		sun->setEmitDirection(glm::vec3(0, -1, 0));
 		sun->setInnerCutoff(glm::radians(30.f));
 		sun->setOuterCutoff(glm::radians(45.f));
 
@@ -363,7 +368,7 @@ int main() {
 			lightBox->setScale(glm::vec3(0.1, 0.1, 0.1));
 		}
 
-		sun->addChild(lightBox);
+		// sun->addChild(lightBox);
 	}
 	CGL::Camera* camera1 = new CGL::Camera(glm::vec3(), glm::radians(180.f), 0, glm::radians(45.f), width, height);
 	camera1->setViewPosition(glm::vec3(10, 10, 10));

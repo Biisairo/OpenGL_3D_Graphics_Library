@@ -23,9 +23,9 @@ namespace CGL {
 			float diffuseStrength = 1.f;
 			float specularStrength = 1.f;
 
-			glm::vec4 ambientcolor = glm::vec4(1, 1, 1, 1);
-			glm::vec4 diffusecolor = glm::vec4(1, 1, 1, 1);
-			glm::vec4 specularcolor = glm::vec4(1, 1, 1, 1);
+			glm::vec3 ambientcolor = glm::vec3(1, 1, 1);
+			glm::vec3 diffusecolor = glm::vec3(1, 1, 1);
+			glm::vec3 specularcolor = glm::vec3(1, 1, 1);
 
 			// 강도
 			float intensity = 1.f;
@@ -37,10 +37,10 @@ namespace CGL {
 			// (1 / constant + linear × d + quadratic × d x d), d 는 거리
 
 			// multiple minus when directional light
-			glm::vec4 position = glm::vec4(0, 0, 0, 1);
+			glm::vec3 position = glm::vec3(0, 0, 0);
 
 			// only for emitType 2, spotlight
-			glm::vec4 emitDirection = glm::vec4(0, 0, 0, 0);
+			glm::vec3 emitDirection = glm::vec3(0, 0, 0);
 			float innerCutoff = 0;
 			float outerCutoff = 0;
 
@@ -54,15 +54,15 @@ namespace CGL {
 			void setAmbientStrength(float ambientStrength);
 			void setDiffuseStrength(float diffuseStrength);
 			void setSpecularStrength(float specularStrength);
-			void setAmbientcolor(glm::vec4 ambientcolor);
-			void setDiffusecolor(glm::vec4 diffusecolor);
-			void setSpecularcolor(glm::vec4 specularcolor);
+			void setAmbientcolor(glm::vec3 ambientcolor);
+			void setDiffusecolor(glm::vec3 diffusecolor);
+			void setSpecularcolor(glm::vec3 specularcolor);
 			void setIntensity(float intensity);
 			void setConstantAttenuation(float constantAttenuation);
 			void setLinearAttenuation(float linearAttenuation);
 			void setQuadraticAttenuation(float quadraticAttenuation);
-			void setPosition(glm::vec4 position);
-			void setEmitDirection(glm::vec4 emitDirection);
+			void setPosition(glm::vec3 position);
+			void setEmitDirection(glm::vec3 emitDirection);
 			void setInnerCutoff(float innerCutoff);
 			void setOuterCutoff(float outerCutoff);
 

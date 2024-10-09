@@ -33,6 +33,7 @@ namespace CGL {
 
 			DrawType drawType = DRAW_TRIANGLES;
 
+		public:
 			Material material;
 
 		public:

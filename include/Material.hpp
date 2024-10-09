@@ -7,15 +7,11 @@ namespace CGL {
 
 	class Material {
 		private:
-			glm::vec3 ambient;
-			glm::vec3 diffuse;
-			glm::vec3 specular;
-			float shininess;
-
-			// objectID diffuseMapID;
-			// objectID specularMapID;
-			// objectID normalMapID;
-			// objectID heightMapID;
+			glm::vec3 ambientColor = glm::vec3(1, 1, 1);
+			glm::vec3 diffuseColor = glm::vec3(1, 1, 1);
+			glm::vec3 specularColor = glm::vec3(1, 1, 1);
+			float alpha = 1.0;
+			float shininess = 32;
 
 		public:
 			Material();
@@ -23,25 +19,18 @@ namespace CGL {
 			Material(const Material& other);
 			Material& operator=(const Material& other);
 
-			// getter
-			glm::vec3 getAmbient();
-			glm::vec3 getDiffuse();
-			glm::vec3 getSpecular();
-			float getShininess();
-			// objectID getDiffuseMap();
-			// objectID getSpecularMap();
-			// objectID getNormalMap();
-			// objectID getHeightMap();
-
-			// setter
-			void setAmbient(glm::vec3 ambient);
-			void setDiffuse(glm::vec3 diffuse);
-			void setSpecular(glm::vec3 specular);
+			void setAmbientColor(glm::vec3 ambient);
+			void setDiffuseColor(glm::vec3 diffuse);
+			void setSpecularColor(glm::vec3 specular);
+			void setAlpha(float alpha);
 			void setShininess(float shininess);
-			// void setDiffuseMap(objectID ID);
-			// void setSpecularMap(objectID ID);
-			// void setNormalMap(objectID ID);
-			// void setHeightMap(objectID ID);
+			
+			glm::vec4 getAmbientColor();
+			glm::vec4 getDiffuseColor();
+			glm::vec4 getSpecularColor();
+			float getAlpha();
+			float getShininess();
+			
 	};
 
 } // namespace CGL
