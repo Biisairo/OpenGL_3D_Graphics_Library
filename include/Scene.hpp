@@ -5,13 +5,14 @@
 #include <algorithm>
 
 #include "IObject3D.hpp"
+#include "Camera.hpp"
 
 namespace CGL {
 
 	class Scene {
 		private:
-			CGL::IObject3D* root;
-			objectID mainCameraID;
+			IObject3D root;
+			Camera* mainCamera;
 
 		public:
 			Scene();
@@ -19,9 +20,12 @@ namespace CGL {
 			Scene(const Scene& other) = delete;
 			Scene& operator=(const Scene& other) = delete;
 
+			IObject3D* getRoot();
 			void addObject(IObject3D* object);
-			void removeObject(objectID ID);
-			void setMainCamera(objectID mainCameraID);
+			IObject3D* findObject(objectID ID);
+			IObject3D* removeObject(objectID ID);
+			void setMainCamera(Camera* mainCamera);
+			Camera* getMainCamera();
 
 		private:
 	};

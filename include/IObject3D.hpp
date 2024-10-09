@@ -1,6 +1,7 @@
 #ifndef IOBJECT3D_HPP
 #define IOBJECT3D_HPP
 
+#include <string>
 #include <vector>
 
 #include "IResourceID.hpp"
@@ -26,12 +27,14 @@ namespace CGL {
 			glm::mat4 translate;
 
 		public:
+			std::string memo = "";
+
+		public:
 			IObject3D();
 			~IObject3D();
 			IObject3D(const IObject3D& other);
 			IObject3D& operator=(const IObject3D& other);
 
-			void setParent(IObject3D *parent);
 			IObject3D* getParent();
 			void addChild(IObject3D *child);
 			IObject3D* findChild(objectID ID);
@@ -47,10 +50,12 @@ namespace CGL {
 			void setTranslate(glm::vec3 translate);
 			void addTranslate(glm::vec3 translate);
 
-			glm::mat4& getModel();
+			glm::mat4 getModelFromParent();
+			glm::mat4 getModel();
+			glm::vec3 getPosition();
 			
 			virtual ObjectType getObjectType();
-		
+
 		private:
 	};
 

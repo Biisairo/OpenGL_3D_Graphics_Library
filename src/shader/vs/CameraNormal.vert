@@ -9,7 +9,7 @@ layout (std140) uniform Matrices
 {
     mat4 PROJECTION;
     mat4 VIEW;
-	vec3 VIEWPOS;
+	vec4 VIEWPOS;
 };
 
 layout (location = 0) in vec3 aPos;

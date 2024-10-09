@@ -32,12 +32,8 @@ CGL::IObject3D& CGL::IObject3D::operator=(const IObject3D &other) {
 	return *this;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void CGL::IObject3D::setParent(IObject3D *parent) {
-	this->parent = parent;
-}
 
 CGL::IObject3D* CGL::IObject3D::getParent() {
 	return this->parent;
@@ -128,13 +124,30 @@ void CGL::IObject3D::addTranslate(glm::vec3 pos) {
 	this->model = this->translate * this->rotate * this->scale;
 }
 
-glm::mat4& CGL::IObject3D::getModel() {
+glm::mat4 CGL::IObject3D::getModelFromParent() {
 	return this->model;
+}
+
+glm::mat4 CGL::IObject3D::getModel() {
+	CGL::IObject3D* curObject = this;
+	glm::mat4 model = this->model;
+
+	while (curObject->parent != nullptr) {
+		model = curObject->parent->model * model;
+		curObject = curObject->parent;
+	}
+	
+	return model;
+}
+
+glm::vec3 CGL::IObject3D::getPosition() {
+	glm::mat4 model = this->getModel();
+	return model * glm::vec4(0, 0, 0, 1);
 }
 
 CGL::ObjectType CGL::IObject3D::getObjectType() {
 	return OBJECT_NONE;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // private ////////////////////////////////////////////////////////////////////////////////////////////////////////////

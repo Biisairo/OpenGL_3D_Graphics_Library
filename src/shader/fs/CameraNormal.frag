@@ -18,13 +18,13 @@ layout (std140) uniform Matrices
 {
     mat4 PROJECTION;
     mat4 VIEW;
-	vec3 VIEWPOS;
+	vec4 VIEWPOS;
 };
 
 layout (std140) uniform Lights
 {
 	uint LIGHT_COUNT;
-	Light LIGHT[10];
+	Light LIGHT[MAX_LIGHT_COUNT];
 };
 
 in Camera_VS_OUT {
@@ -42,28 +42,73 @@ out vec4 FragColor;
 
 // funtion
 
-vec3 computePointLight(Light light, TangentSpace tangentSpace) {
-	vec3 tangentLightPos = (tangentSpace.TBN * vec4(light.position, 1.0)).xyz;
+vec4 computeLight(Light light, TangentSpace tangentSpace) {
+    vec4 lightColor = vec4(0.0);
 
-	// ambient
-    float ambient = light.ambientStrength;
+    // 빛 방향 및 거리 계산
+    vec3 lightDir;
+    float distance = length(light.position.xyz - tangentSpace.fragPos); // 거리 계산
+    float attenuation;
 
-    // diffuse
-    vec3 lightDir = normalize(tangentLightPos - tangentSpace.fragPos);
-    float diff = max(dot(lightDir, tangentSpace.normal), 0.0);
-    float diffuse = diff * light.diffuseStrength;
+    if (light.emitType == 0) { // Directional Light
 
-    // specular
+        lightDir = normalize(-light.emitDirection.xyz);
+        attenuation = 1.0; // Directional light는 거리 감쇠가 없음
+
+    } else if (light.emitType == 1) { // Point Light
+
+        lightDir = normalize(light.position.xyz - tangentSpace.fragPos);
+
+        // 거리 감쇠
+        attenuation = 1.0 / (light.constantAttenuation + light.linearAttenuation * distance + light.quadraticAttenuation * (distance * distance));
+
+    } else if (light.emitType == 2) { // Spot Light
+
+        lightDir = normalize(light.position.xyz - tangentSpace.fragPos);
+        float spotEffect = dot(lightDir, normalize(-light.emitDirection.xyz));
+
+        float innerCutoff = cos(light.innerCutoff);
+        float outerCutoff = cos(light.outerCutoff);
+
+        // 거리 감쇠
+        attenuation;
+
+        if (spotEffect < outerCutoff) { // 스포트라이트 범위 밖에 있는 경우
+
+            attenuation = 0;
+
+        } else if (spotEffect < innerCutoff) { // 스포트라이트 범위 중간에 있는 경우
+
+            // 비율을 구하고 clamping하여 0.0에서 1.0 사이로 설정
+            float spotEffectAdjusted = (spotEffect - outerCutoff) / (innerCutoff - outerCutoff);
+            spotEffectAdjusted = clamp(spotEffectAdjusted, 0.0, 1.0);
+            
+            // 기존의 distance attenuation에 스포트 효과를 곱하여 적용
+            attenuation = spotEffectAdjusted / (light.constantAttenuation + light.linearAttenuation * distance + light.quadraticAttenuation * (distance * distance));
+
+        } else { // 스포트 라이트 내부에 있는 경우
+
+            attenuation = 1.0 / (light.constantAttenuation + light.linearAttenuation * distance + light.quadraticAttenuation * (distance * distance));
+        
+        }
+
+    }
+
+    // Phong 모델을 사용한 조명 계산
+    vec3 normal = normalize(tangentSpace.normal);
+    float diffuseStrength = max(dot(normal, lightDir), 0.0);
+
     vec3 viewDir = normalize(tangentSpace.viewPos - tangentSpace.fragPos);
-    vec3 reflectDir = reflect(-lightDir, tangentSpace.normal);
-    vec3 halfwayDir = normalize(lightDir + viewDir);  
-    float specular = pow(max(dot(tangentSpace.normal, halfwayDir), 0.0), light.specularStrength);
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32); // 물체의 shininess 특성 사용
 
-	float weight = ambient + diffuse + specular;
+    lightColor += attenuation * (
+        light.ambientStrength * light.ambientcolor +
+        diffuseStrength * light.diffuseStrength * light.diffusecolor +
+        spec * light.specularStrength * light.specularcolor
+    );
 
-	vec3 lightColor = weight * light.color;
-
-	return lightColor;
+    return lightColor; // 최종 조명 색상 반환
 }
 
 vec2 parallaxOcclusionMapping(vec2 texCoords, vec3 viewDir)
@@ -134,7 +179,7 @@ void main(){
 
         tangentSpace.normal = normal;
     #elif defined(USE_NORMAL)
-        tangentSpace.viewPos = VIEWPOS;
+        tangentSpace.viewPos = VIEWPOS.xyz;
         tangentSpace.fragPos = fs_in.FragPos;
         tangentSpace.normal = fs_in.Normal;
     #endif
@@ -145,23 +190,14 @@ void main(){
         fragColor = texture(diffuseMap, fs_in.TexCoords).rgb * fs_in.VertexColor;
     #endif
 
-    vec3 lightColorSum = vec3(1.0);
+    vec4 lightColorSum = vec4(0.19, 0.16, 0.63, 1.0);
     #if defined(USE_NORMAL)
-    lightColorSum = vec3(0.0);
+    lightColorSum = vec4(0.0);
     for (int i = 0; i < LIGHT_COUNT; i++) {
-        vec3 lightColor = vec3(0);
-        if (LIGHT[i].emitType == 0) {
-            ;
-        } else if (LIGHT[i].emitType == 1) {
-            lightColor = computePointLight(LIGHT[i], tangentSpace);
-        } else if (LIGHT[i].emitType == 2) {
-            ;
-        }
+        vec4 lightColor = computeLight(LIGHT[i], tangentSpace);
         lightColorSum += lightColor;
     }
     #endif
     
-    vec3 colorWithLight = fragColor * lightColorSum;
-
-    FragColor = vec4(colorWithLight, fs_in.VertexColor.w);
+    FragColor = vec4(fragColor * lightColorSum.xyz, fs_in.VertexColor.w);
 }

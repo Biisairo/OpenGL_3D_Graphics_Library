@@ -9,7 +9,7 @@ CGL::Mesh::~Mesh() {
 }
 
 CGL::Mesh::Mesh(const CGL::Mesh& other) : IObject3D(other) {
-	this->needToUpdate = other.needToUpdate;
+	this->needToUpdate = true;
 
 	this->position = other.position;
 	this->normal = other.normal;
@@ -26,7 +26,7 @@ CGL::Mesh& CGL::Mesh::operator=(const CGL::Mesh& other) {
 	if (this != &other) {
 		CGL:IObject3D::operator=(other);
 
-		this->needToUpdate = other.needToUpdate;
+		this->needToUpdate = true;
 
 		this->position = other.position;
 		this->normal = other.normal;
@@ -42,7 +42,7 @@ CGL::Mesh& CGL::Mesh::operator=(const CGL::Mesh& other) {
 	return *this;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CGL::Mesh::setPosition(std::vector<glm::vec3>& position) {
@@ -81,7 +81,7 @@ void CGL::Mesh::setColors(std::vector<glm::vec4>& colors) {
 	this->colors = colors;
 }
 
-void CGL::Mesh::setColors(glm::vec4& color) {
+void CGL::Mesh::setColors(glm::vec4 color) {
     this->needToUpdate = true;
 
 	this->colors.clear();
@@ -94,28 +94,55 @@ void CGL::Mesh::setIndex(std::vector<indice>& index) {
 	this->index = index;
 }
 
+void CGL::Mesh::setDrawType(CGL::DrawType drawType) {
+    this->needToUpdate = true;
+    
+    this->drawType = drawType;
+}
+
 void CGL::Mesh::setMaterial(CGL::Material& material) {
 	this->needToUpdate = true;
 
 	this->material = material;
 }
 
-CGL::ObjectType CGL::Mesh::getObjectType() {
-	return OBJECT_MESH;
+std::vector<glm::vec3> CGL::Mesh::getPosition() {
+	return this->position;
 }
 
+std::vector<glm::vec3> CGL::Mesh::getNormal() {
+	return this->normal;
+}
 
-// private ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+std::vector<glm::vec2> CGL::Mesh::getTexCoords() {
+	return this->texCoords;
+}
+
+std::vector<glm::vec3> CGL::Mesh::getTangent() {
+	return this->tangent;
+}
+
+std::vector<glm::vec3> CGL::Mesh::getBitangent() {
+	return this->bitangent;
+}
+
+std::vector<glm::vec4> CGL::Mesh::getColors() {
+	return this->colors;
+}
+
+std::vector<indice> CGL::Mesh::getIndex() {
+	return this->index;
+}
+
+CGL::DrawType CGL::Mesh::getDrawType(){
+    return this->drawType;
+}
+
+CGL::Material CGL::Mesh::getMaterial() {
+	return this->material;
+}
 
 void CGL::Mesh::setVertexData() {
-	if (this->needToUpdate == false)
-		return;
-
-	if (this->position.size() == 0)
-		return;
-
-	this->needToUpdate = false;
-
 	if (this->position.size() != this->normal.size()) {
 		this->makeNormal();
 	}
@@ -131,8 +158,8 @@ void CGL::Mesh::setVertexData() {
 
 	if (this->position.size() != this->colors.size()) {
 		glm::vec4 color;
-		if (this->colors.size() == 1)
-			glm::vec4 color = this->colors.front();
+		if (this->colors.size())
+			color = this->colors.front();
 		else
 			color = glm::vec4(1, 1, 1, 1);
 		this->colors.clear();
@@ -141,6 +168,21 @@ void CGL::Mesh::setVertexData() {
 			this->colors.push_back(color);
 	}
 }
+
+CGL::ObjectType CGL::Mesh::getObjectType() {
+	return OBJECT_MESH;
+}
+
+bool CGL::Mesh::needUpdate() {
+    return this->needToUpdate;
+}
+
+void CGL::Mesh::updateDone() {
+    this->needToUpdate = false;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// private ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CGL::Mesh::makeNormal() {
     // 정점의 법선을 초기화하고 크기를 설정

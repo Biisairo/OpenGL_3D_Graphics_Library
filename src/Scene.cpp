@@ -1,8 +1,11 @@
 #include "Scene.hpp"
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 CGL::Scene::Scene() {
-	this->root = nullptr;
-	this->mainCameraID = 0;
+	// this->root = nullptr;
+	this->mainCamera = nullptr;
 }
 
 CGL::Scene::~Scene() {
@@ -21,22 +24,29 @@ CGL::Scene::~Scene() {
 // 	return *this;
 // }
 
-void CGL::Scene::addObject(IObject3D* object) {
-	this->root->addChild(object);
+CGL::IObject3D* CGL::Scene::getRoot() {
+	return &this->root;
 }
 
-void CGL::Scene::removeObject(objectID ID) {
-	this->root->removeChild(ID);
+void CGL::Scene::addObject(CGL::IObject3D* object) {
+	this->root.addChild(object);
 }
 
-void CGL::Scene::setMainCamera(objectID mainCameraID) {
-	this->mainCameraID = mainCameraID;
+CGL::IObject3D* CGL::Scene::findObject(objectID ID) {
+	return this->root.findChild(ID);
 }
 
+CGL::IObject3D* CGL::Scene::removeObject(objectID ID) {
+	return this->root.removeChild(ID);
+}
 
-// public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void CGL::Scene::setMainCamera(Camera* mainCamera) {
+	this->mainCamera = mainCamera;
+}
 
+CGL::Camera* CGL::Scene::getMainCamera() {
+	return this->mainCamera;
+}
 
-
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // private ////////////////////////////////////////////////////////////////////////////////////////////////////////////

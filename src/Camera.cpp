@@ -5,16 +5,13 @@ CGL::Camera::Camera(
 	glm::vec3 front,
 	glm::vec3 up,
 
-	float FoV,
+	float fov,
 	int width,
 	int height,
 	float zFar,
-	float zNear,
-
-	float moveSpeed,
-	float mouseSpeed
+	float zNear
 ) {
-	this->FoV = FoV;
+	this->fov = fov;
 	this->width = width;
 	this->height = height;
 	this->zFar = zFar;
@@ -27,9 +24,6 @@ CGL::Camera::Camera(
 
 	this->updateVectorWhenAngleBase();
 
-	this->moveSpeed = moveSpeed;
-	this->mouseSpeed = mouseSpeed;
-
 	this->update();
 }
 
@@ -38,16 +32,13 @@ CGL::Camera::Camera(
 	float horizontalAngle,
 	float verticalAngle,
 
-	float FoV,
+	float fov,
 	int width,
 	int height,
 	float zFar,
-	float zNear,
-
-	float moveSpeed,
-	float mouseSpeed
+	float zNear
 ) {
-	this->FoV = FoV;
+	this->fov = fov;
 	this->width = width;
 	this->height = height;
 	this->zFar = zFar;
@@ -60,9 +51,6 @@ CGL::Camera::Camera(
 
 	this->updateVectorWhenAngleBase();
 
-	this->moveSpeed = moveSpeed;
-	this->mouseSpeed = mouseSpeed;
-
 	this->update();
 }
 
@@ -71,7 +59,7 @@ CGL::Camera::~Camera() {
 }
 
 CGL::Camera::Camera(const Camera& other) : CGL::IObject3D(other) {
-	this->FoV = other.FoV;
+	this->fov = other.fov;
 	this->width = other.width;
 	this->height = other.height;
 	this->zFar = other.zFar;
@@ -89,7 +77,7 @@ CGL::Camera& CGL::Camera::operator=(const Camera& other) {
 	if (this != &other) {
 		CGL:IObject3D::operator=(other);
 
-		this->FoV = other.FoV;
+		this->fov = other.fov;
 		this->width = other.width;
 		this->height = other.height;
 		this->zFar = other.zFar;
@@ -106,11 +94,23 @@ CGL::Camera& CGL::Camera::operator=(const Camera& other) {
 	return *this;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CGL::Camera::setViewRotate(glm::vec3 front) {
+    this->front = glm::normalize(front);
+    this->right = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), this->front));
+    this->up = glm::normalize(glm::cross(this->front, this->right));
 
+	this->updateAngleWhenVectorBase();
+
+	this->update();
+
+    glm::vec3 defaultFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 axis = glm::normalize(glm::cross(defaultFront, this->front));
+    float angle = acos(glm::dot(defaultFront, this->front));
+
+    this->setRotate(axis, angle);
 }
 
 void CGL::Camera::addViewRotate(glm::vec3 axis, float angle) {
@@ -127,22 +127,25 @@ void CGL::Camera::addViewRotate(glm::vec3 axis, float angle) {
 }
 
 void CGL::Camera::addViewRotate(float xDelta, float yDelta) {
-    horizontalAngle += xDelta * this->mouseSpeed;
-    verticalAngle -= yDelta * this->mouseSpeed;
+    horizontalAngle += xDelta;
+    verticalAngle += yDelta;
 
     this->updateVectorWhenAngleBase();
 
 	this->update();
 
-    float yawAngle = xDelta * this->mouseSpeed;
-    glm::vec3 yawAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+    // float yawAngle = xDelta;
+    // glm::vec3 yawAxis = glm::vec3(0.0f, 1.0f, 0.0f);
 
-    float pitchAngle = yDelta * this->mouseSpeed;
-    glm::vec3 pitchAxis = this->right;
+    // float pitchAngle = yDelta;
+    // glm::vec3 pitchAxis = this->right;
 
-	glm::vec3 axis = glm::normalize(yawAxis + pitchAxis);
-    float angle = glm::length(glm::vec2(yawAngle, pitchAngle));
-	this->addRotate(axis, angle);
+	// glm::vec3 axis = glm::normalize(yawAxis + pitchAxis);
+    // float angle = glm::length(glm::vec2(yawAngle, pitchAngle));
+	// this->setRotate(axis, angle);
+	
+	this->addRotate(glm::vec3(0, 1, 0), xDelta);
+	this->addRotate(this->right, -yDelta);
 }
 
 void CGL::Camera::setViewPosition(glm::vec3 position) {
@@ -162,33 +165,52 @@ void CGL::Camera::addViewPosition(glm::vec3 move) {
 }
 
 void CGL::Camera::addViewPosition(float xOffset, float yOffset, float zOffset) {
-	this->position += this->front * zOffset * this->moveSpeed;
-	this->position += this->right * xOffset * this->moveSpeed;
-	this->position += this->up * yOffset * this->moveSpeed;
+	this->position += this->front * zOffset;
+	this->position -= this->right * xOffset;
+	this->position += this->up * yOffset;
 
 	this->update();
 
-	this->addTranslate(glm::vec3(xOffset * this->moveSpeed, yOffset * this->moveSpeed, zOffset * this->moveSpeed));
+	this->setTranslate(this->position);
+}
+
+glm::mat4 CGL::Camera::getProjection() {
+	return this->projection;
+}
+
+glm::mat4 CGL::Camera::getView() {
+	return this->view;
+}
+
+glm::vec4 CGL::Camera::getViewPos() {
+	return glm::vec4(this->position, 1);
 }
 
 CGL::ObjectType CGL::Camera::getObjectType() {
 	return OBJECT_CAMERA;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // private ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CGL::Camera::update() {
-	this->projection = glm::perspective(glm::radians(this->FoV), width / static_cast<float>(height), zNear, zFar);
-	// this->projection = glm::ortho(0.f, (float)this->width, 0.f, (float)this->height, this->zNear, this->zFar);
+	if (this->fov < 0)
+		this->projection = glm::ortho(0.f, (float)this->width, 0.f, (float)this->height, this->zNear, this->zFar);
+	else
+		this->projection = glm::perspective(this->fov, static_cast<float>(this->width) / static_cast<float>(this->height), zNear, zFar);
 
-	glm::vec3 center = glm::normalize(this->position + front);
+	glm::vec3 center = this->position + this->front;
 
 	this->view = glm::lookAt(
 		this->position,
 		center,
 		this->up
 	);
+
+	if (this->getParent() != nullptr) {
+		glm::mat4 parentModel = this->getParent()->getModel();
+		this->view = glm::inverse(parentModel) * this->view;
+	}
 }
 
 void CGL::Camera::updateAngleWhenVectorBase() {
@@ -197,8 +219,14 @@ void CGL::Camera::updateAngleWhenVectorBase() {
 }
 
 void CGL::Camera::updateVectorWhenAngleBase() {
-	if (this->verticalAngle > 89.0f) this->verticalAngle = 89.0f;
-    if (this->verticalAngle < -89.0f) this->verticalAngle = -89.0f;
+	float vAngleDegree = glm::degrees(this->verticalAngle);
+
+	if (vAngleDegree > 89.9)
+		vAngleDegree = 89.9;
+    if (vAngleDegree < -89.9)
+		vAngleDegree = -89.9;
+
+	this->verticalAngle = glm::radians(vAngleDegree);
 
 	this->front = glm::normalize(glm::vec3(
 		cos(verticalAngle) * sin(horizontalAngle),
