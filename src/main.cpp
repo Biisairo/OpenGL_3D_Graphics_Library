@@ -8,8 +8,8 @@
 #include "Material.hpp"
 
 int main() {
-	int width = 500;
-	int height = 500;
+	int width = 800;
+	int height = 600;
 
 	CGL::Device& device = CGL::Device::getInstance();
 	device.init();

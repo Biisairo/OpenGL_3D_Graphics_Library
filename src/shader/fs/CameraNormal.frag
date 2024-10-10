@@ -199,12 +199,14 @@ void main(){
         fragColor = texture(diffuseMap, fs_in.TexCoords).rgb * fs_in.VertexColor;
     #endif
 
-    vec4 lightColorSum = vec4(0.19, 0.16, 0.63, 1.0);
+    vec4 lightColorSum = vec4(1.0);
     #if defined(USE_NORMAL)
-    lightColorSum = vec4(0.0);
-    for (int i = 0; i < LIGHT_COUNT; i++) {
-        vec4 lightColor = computeLight(LIGHT[i], tangentSpace);
-        lightColorSum += lightColor;
+    if (LIGHT_COUNT > 0) {
+        lightColorSum = vec4(0.0);
+        for (int i = 0; i < LIGHT_COUNT; i++) {
+            vec4 lightColor = computeLight(LIGHT[i], tangentSpace);
+            lightColorSum += lightColor;
+        }
     }
     #endif
     

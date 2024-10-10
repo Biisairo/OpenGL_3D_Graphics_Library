@@ -101,7 +101,7 @@ namespace CGL {
 	};
 
 	struct LightBuffers {
-		uint lightCount;
+		uint lightCount = 0;
 		std::vector<LightBuffer> light;
 	};
 
