@@ -1,6 +1,9 @@
 # OpenGL 3D Graphics Library
 
-OpenGL 을 기반으로한 3D Graphic Library
+목표 : OpenGL 을 기반으로한 3D Graphic Library 제작
+
+<img src="https://github.com/user-attachments/assets/ad9a6850-8066-4f58-a740-d0d7fbc34dbd" height=500>
+<img src="https://github.com/user-attachments/assets/864d611f-68c6-454d-92cd-9dcc9d3478a5" height=500>
 
 ## Device
 실제 OpenGL 관련 함수들이 불려지는 클래스
