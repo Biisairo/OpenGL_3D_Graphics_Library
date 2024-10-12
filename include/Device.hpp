@@ -164,7 +164,6 @@ namespace CGL {
 				float alpha,
 				float shininess
 			);
-			// void updateMesh(texture);
 			void deleteMesh(objectID ID);
 			void draw(objectID ID, glm::mat4 model);
 

@@ -252,8 +252,6 @@ int main() {
 
 		head2->setColors(colors);
 		head2->setDrawType(CGL::DRAW_TRIANGLES);
-		// head2->setScale(glm::vec3(1, 1, 1));
-		// head2->setTranslate(glm::vec3(0, 2, 0));
 		CGL::Material material;
 		material.setAmbientColor(glm::vec3(0, 0, 0.5));
 		material.setDiffuseColor(glm::vec3(0, 0.5, 0));
@@ -314,23 +312,23 @@ int main() {
 		material.setShininess(16);
 		box->material = material;
 	}
-	CGL::Light* sun = new CGL::Light();
+	CGL::Light* lightObj = new CGL::Light();
 	{
-		sun->setLightType(CGL::LIGHT_POINT);
-		sun->setAmbientStrength(1);
-		sun->setDiffuseStrength(1);
-		sun->setSpecularStrength(1);
-		sun->setAmbientcolor(glm::vec3(1, 0.8, 0.8));
-		sun->setDiffusecolor(glm::vec3(1, 0.8, 0.8));
-		sun->setSpecularcolor(glm::vec3(1, 0.8, 0.8));
-		sun->setIntensity(0.8);
-		sun->setConstantAttenuation(0.01);
-		sun->setLinearAttenuation(0.01);
-		sun->setQuadraticAttenuation(0.01);
-		sun->setPosition(glm::vec3(0, 5, 0));
-		sun->setEmitDirection(glm::vec3(0, -1, 0));
-		sun->setInnerCutoff(glm::radians(30.f));
-		sun->setOuterCutoff(glm::radians(45.f));
+		lightObj->setLightType(CGL::LIGHT_POINT);
+		lightObj->setAmbientStrength(1);
+		lightObj->setDiffuseStrength(1);
+		lightObj->setSpecularStrength(1);
+		lightObj->setAmbientcolor(glm::vec3(1, 0.8, 0.8));
+		lightObj->setDiffusecolor(glm::vec3(1, 0.8, 0.8));
+		lightObj->setSpecularcolor(glm::vec3(1, 0.8, 0.8));
+		lightObj->setIntensity(0.8);
+		lightObj->setConstantAttenuation(0.01);
+		lightObj->setLinearAttenuation(0.01);
+		lightObj->setQuadraticAttenuation(0.01);
+		lightObj->setPosition(glm::vec3(0, 5, 0));
+		lightObj->setEmitDirection(glm::vec3(0, -1, 0));
+		lightObj->setInnerCutoff(glm::radians(30.f));
+		lightObj->setOuterCutoff(glm::radians(45.f));
 
 		CGL::Mesh* lightBox = new CGL::Mesh();
 		{
@@ -371,12 +369,12 @@ int main() {
 			};
 			lightBox->setPosition(vertex);
 			lightBox->setIndex(index);
-			lightBox->setColors(sun->getSpecularcolor());
+			lightBox->setColors(lightObj->getSpecularcolor());
 			lightBox->setDrawType(CGL::DRAW_TRIANGLES);
 			lightBox->setScale(glm::vec3(0.1, 0.1, 0.1));
 		}
 
-		// sun->addChild(lightBox);
+		lightObj->addChild(lightBox);
 	}
 	CGL::Camera* camera1 = new CGL::Camera(glm::vec3(), glm::radians(180.f), 0, glm::radians(45.f), width, height);
 	camera1->setViewPosition(glm::vec3(10, 10, 10));
@@ -385,7 +383,7 @@ int main() {
 	// device.setMouseMode(CGL::MOUSE_HIDDEN);
 
 	scene.addObject(cor);
-	scene.addObject(sun);
+	scene.addObject(lightObj);
 	scene.addObject(floar);
 	scene.addObject(box);
 	scene.addObject(camera1);
