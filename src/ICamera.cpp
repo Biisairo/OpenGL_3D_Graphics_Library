@@ -1,6 +1,6 @@
-#include "Camera.hpp"
+#include "ICamera.hpp"
 
-CGL::Camera::Camera(
+CGL::ICamera::ICamera(
 	glm::vec3 position,
 	glm::vec3 front,
 	glm::vec3 up,
@@ -27,7 +27,7 @@ CGL::Camera::Camera(
 	this->update();
 }
 
-CGL::Camera::Camera(
+CGL::ICamera::ICamera(
 	glm::vec3 position,
 	float horizontalAngle,
 	float verticalAngle,
@@ -54,11 +54,11 @@ CGL::Camera::Camera(
 	this->update();
 }
 
-CGL::Camera::~Camera() {
+CGL::ICamera::~ICamera() {
 	;
 }
 
-CGL::Camera::Camera(const Camera& other) : CGL::IObject3D(other) {
+CGL::ICamera::ICamera(const ICamera& other) : CGL::IObject3D(other) {
 	this->fov = other.fov;
 	this->width = other.width;
 	this->height = other.height;
@@ -73,7 +73,7 @@ CGL::Camera::Camera(const Camera& other) : CGL::IObject3D(other) {
 	this->update();
 }
 
-CGL::Camera& CGL::Camera::operator=(const Camera& other) {
+CGL::ICamera& CGL::ICamera::operator=(const ICamera& other) {
 	if (this != &other) {
 		CGL:IObject3D::operator=(other);
 
@@ -97,7 +97,7 @@ CGL::Camera& CGL::Camera::operator=(const Camera& other) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CGL::Camera::setViewRotate(glm::vec3 front) {
+void CGL::ICamera::setViewRotate(glm::vec3 front) {
     this->front = glm::normalize(front);
     this->right = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), this->front));
     this->up = glm::normalize(glm::cross(this->front, this->right));
@@ -113,7 +113,7 @@ void CGL::Camera::setViewRotate(glm::vec3 front) {
     this->setRotate(axis, angle);
 }
 
-void CGL::Camera::addViewRotate(glm::vec3 axis, float angle) {
+void CGL::ICamera::addViewRotate(glm::vec3 axis, float angle) {
 	glm::mat4 rotate = glm::rotate(glm::mat4(1), angle, axis);
 	this->front = glm::normalize(rotate * glm::vec4(this->front, 0));
 	this->right = glm::normalize(rotate * glm::vec4(this->right, 0));
@@ -126,7 +126,7 @@ void CGL::Camera::addViewRotate(glm::vec3 axis, float angle) {
 	this->addRotate(axis, angle);
 }
 
-void CGL::Camera::addViewRotate(float xDelta, float yDelta) {
+void CGL::ICamera::addViewRotate(float xDelta, float yDelta) {
     horizontalAngle += xDelta;
     verticalAngle += yDelta;
 
@@ -148,7 +148,7 @@ void CGL::Camera::addViewRotate(float xDelta, float yDelta) {
 	this->addRotate(this->right, -yDelta);
 }
 
-void CGL::Camera::setViewPosition(glm::vec3 position) {
+void CGL::ICamera::setViewPosition(glm::vec3 position) {
 	this->position = position;
 
 	this->update();
@@ -156,7 +156,7 @@ void CGL::Camera::setViewPosition(glm::vec3 position) {
 	this->setTranslate(position);
 }
 
-void CGL::Camera::addViewPosition(glm::vec3 move) {
+void CGL::ICamera::addViewPosition(glm::vec3 move) {
 	this->position += move;
 
 	this->update();
@@ -164,7 +164,7 @@ void CGL::Camera::addViewPosition(glm::vec3 move) {
 	this->addTranslate(move);
 }
 
-void CGL::Camera::addViewPosition(float xOffset, float yOffset, float zOffset) {
+void CGL::ICamera::addViewPosition(float xOffset, float yOffset, float zOffset) {
 	this->position += this->front * zOffset;
 	this->position -= this->right * xOffset;
 	this->position += this->up * yOffset;
@@ -174,26 +174,26 @@ void CGL::Camera::addViewPosition(float xOffset, float yOffset, float zOffset) {
 	this->setTranslate(this->position);
 }
 
-glm::mat4 CGL::Camera::getProjection() {
+glm::mat4 CGL::ICamera::getProjection() {
 	return this->projection;
 }
 
-glm::mat4 CGL::Camera::getView() {
+glm::mat4 CGL::ICamera::getView() {
 	return this->view;
 }
 
-glm::vec4 CGL::Camera::getViewPos() {
+glm::vec4 CGL::ICamera::getViewPos() {
 	return glm::vec4(this->position, 1);
 }
 
-CGL::ObjectType CGL::Camera::getObjectType() {
+CGL::ObjectType CGL::ICamera::getObjectType() {
 	return OBJECT_CAMERA;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // private ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CGL::Camera::update() {
+void CGL::ICamera::update() {
 	if (this->fov < 0)
 		this->projection = glm::ortho(0.f, (float)this->width, 0.f, (float)this->height, this->zNear, this->zFar);
 	else
@@ -213,12 +213,12 @@ void CGL::Camera::update() {
 	}
 }
 
-void CGL::Camera::updateAngleWhenVectorBase() {
+void CGL::ICamera::updateAngleWhenVectorBase() {
 	this->verticalAngle = atan2(this->front.y, glm::length(glm::vec2(this->front.x, this->front.z)));
     this->horizontalAngle = atan2(this->front.z, this->front.x);;
 }
 
-void CGL::Camera::updateVectorWhenAngleBase() {
+void CGL::ICamera::updateVectorWhenAngleBase() {
 	float vAngleDegree = glm::degrees(this->verticalAngle);
 
 	if (vAngleDegree > 89.9)

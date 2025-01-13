@@ -40,11 +40,11 @@ CGL::IObject3D* CGL::Scene::removeObject(objectID ID) {
 	return this->root.removeChild(ID);
 }
 
-void CGL::Scene::setMainCamera(Camera* mainCamera) {
+void CGL::Scene::setMainCamera(ICamera* mainCamera) {
 	this->mainCamera = mainCamera;
 }
 
-CGL::Camera* CGL::Scene::getMainCamera() {
+CGL::ICamera* CGL::Scene::getMainCamera() {
 	return this->mainCamera;
 }
 

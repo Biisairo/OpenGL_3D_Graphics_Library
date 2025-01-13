@@ -32,7 +32,6 @@ void CGL::ImguiDevice::loopBeginProcess() {
 
 void CGL::ImguiDevice::loopEndProcess() {
     ImGui::Render();
-    // glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 

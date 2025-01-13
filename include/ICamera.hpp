@@ -1,5 +1,5 @@
-#ifndef CAMERA_HPP
-#define CAMERA_HPP
+#ifndef ICAMERA_HPP
+#define ICAMERA_HPP
 
 #include "Extern/GLMHeader.hpp"
 
@@ -7,8 +7,8 @@
 
 namespace CGL {
 
-	class Camera : public IObject3D {
-		private:
+	class ICamera : public IObject3D {
+		protected:
 			glm::mat4 projection;
 			float fov; // radian
 			int width;
@@ -25,8 +25,8 @@ namespace CGL {
 			float verticalAngle;
 
 		public:
-			Camera() = delete;
-			Camera(
+			ICamera() = delete;
+			ICamera(
 				glm::vec3 position, // = glm::vec3(0, 0, 0),
 				glm::vec3 front, // = glm::vec3(0, 0, -1),
 				glm::vec3 up, // = glm::vec3(0, 1, 0),
@@ -37,7 +37,7 @@ namespace CGL {
 				float zFar = 1000.f,
 				float zNear = 0.1f
 			);
-			Camera(
+			ICamera(
 				glm::vec3 position, // = glm::vec3(0, 0, 0),
 				float horizontalAngle, // = -glm::pi<float>(),
 				float verticalAngle, // = 0.f,
@@ -48,9 +48,9 @@ namespace CGL {
 				float zFar = 1000.f,
 				float zNear = 0.1f
 			);
-			~Camera();
-			Camera(const Camera& other);
-			Camera& operator=(const Camera& other);
+			~ICamera();
+			ICamera(const ICamera& other);
+			ICamera& operator=(const ICamera& other);
 
 			void setViewRotate(glm::vec3 front);
 			void addViewRotate(glm::vec3 axis, float angle);

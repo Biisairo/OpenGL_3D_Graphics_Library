@@ -119,7 +119,7 @@ void CGL::Device::render(CGL::Scene* scene) {
 	this->addUniformBlock("Lights", programs);
 	this->addUniformBlock("Material", programs);
 
-	CGL::Camera* camera = scene->getMainCamera();
+	CGL::ICamera* camera = scene->getMainCamera();
 	this->registerCamera(camera);
 
 	CGL::LightBuffers lightBuffers;
@@ -129,7 +129,7 @@ void CGL::Device::render(CGL::Scene* scene) {
 	this->recursiveDraw(root);
 }
 
-void CGL::Device::registerCamera(CGL::Camera* camera) {
+void CGL::Device::registerCamera(CGL::ICamera* camera) {
 	if (camera == nullptr)
 		return;
 		

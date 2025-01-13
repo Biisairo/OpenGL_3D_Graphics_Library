@@ -2,7 +2,8 @@
 
 #include "Scene.hpp"
 #include "Mesh.hpp"
-#include "Camera.hpp"
+#include "PlayerCamera.hpp"
+#include "ObjectCamera.hpp"
 #include "Light.hpp"
 #include "Device.hpp"
 #include "Material.hpp"
@@ -383,11 +384,9 @@ int main() {
 
 		lightObj->addChild(lightBox);
 	}
-	CGL::Camera* camera1 = new CGL::Camera(glm::vec3(), glm::radians(180.f), 0, glm::radians(45.f), width, height);
+	CGL::ObjectCamera* camera1 = new CGL::ObjectCamera(glm::vec3(), glm::radians(180.f), 0, glm::radians(45.f), width, height);
 	camera1->setViewPosition(glm::vec3(10, 10, 10));
-	CGL::Camera* camera2 = new CGL::Camera(glm::vec3(), glm::radians(180.f), 0, glm::radians(45.f), width, height);
-
-	// device.setMouseMode(CGL::MOUSE_HIDDEN);
+	CGL::PlayerCamera* camera2 = new CGL::PlayerCamera(glm::vec3(), glm::radians(180.f), 0, glm::radians(45.f), width, height);
 
 	scene.addObject(cor);
 	scene.addObject(lightObj);
@@ -404,7 +403,14 @@ int main() {
 
 	glEnable(GL_CULL_FACE);
 
+	double prevXPos;
+	double prevYPos;
+	{
+		glfwSetCursorPos(device.window, width / 2, height / 2);
+		glfwGetCursorPos(device.window, &prevXPos, &prevYPos);
+	}
 	while (1) {
+		// loop begin process
 		device.loopBeginProcess();
 		imguiDevice.loopBeginProcess();
 
@@ -413,32 +419,51 @@ int main() {
         ImGui::Text("This is a simple text");
         ImGui::End();
 
+		// get delta time
 		double now = glfwGetTime();
 		double delta = now - before;
 		before = now;
 
+		// camera update
 		{
-			double xPos, yPos;
-			glfwGetCursorPos(device.window, &xPos, &yPos);
-			glfwSetCursorPos(device.window, width / 2, height / 2);
+			CGL::ICamera* camera = scene.getMainCamera();
+			
+			if (dynamic_cast<CGL::PlayerCamera*>(camera) != nullptr) {
+				double xPos, yPos;
+				glfwGetCursorPos(device.window, &xPos, &yPos);
+				glfwSetCursorPos(device.window, width / 2, height / 2);
 
-			double mouseSpeed = 0.001;
+				double xDelta = ((width / 2) - xPos);
+				double yDelta = ((height / 2) - yPos);
+				
+				CGL::PlayerCamera* playerCamera = dynamic_cast<CGL::PlayerCamera*>(camera);
+				playerCamera->loopCamera(
+					delta,
+					glfwGetKey(device.window, GLFW_KEY_UP) == GLFW_PRESS,
+					glfwGetKey(device.window, GLFW_KEY_DOWN) == GLFW_PRESS,
+					glfwGetKey(device.window, GLFW_KEY_LEFT) == GLFW_PRESS,
+					glfwGetKey(device.window, GLFW_KEY_RIGHT) == GLFW_PRESS,
+					xDelta, yDelta
+				);
+			} else if (dynamic_cast<CGL::ObjectCamera*>(camera) != nullptr) {
+				double xPos, yPos;
+				glfwGetCursorPos(device.window, &xPos, &yPos);
 
-			double xDelta = ((width / 2) - xPos) * mouseSpeed;
-			double yDelta = ((height / 2) - yPos) * mouseSpeed;
+				CGL::ObjectCamera* objectCamera = dynamic_cast<CGL::ObjectCamera*>(camera);
+				objectCamera->loopCamera(
+					glfwGetMouseButton(device.window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS,
+					glfwGetMouseButton(device.window, GLFW_MOUSE_BUTTON_2) == GLFW_PRESS,
+					xPos - prevXPos,
+					yPos - prevYPos
+				);
 
-			scene.getMainCamera()->addViewRotate(xDelta, yDelta);
+				prevXPos = xPos;
+				prevYPos = yPos;
+			}
+		}
 
-			double moveSpeed = 10;
-
-			if (glfwGetKey(device.window, GLFW_KEY_UP) == GLFW_PRESS)
-				scene.getMainCamera()->addViewPosition(0, 0, delta * moveSpeed);
-			if (glfwGetKey(device.window, GLFW_KEY_DOWN) == GLFW_PRESS)
-				scene.getMainCamera()->addViewPosition(0, 0, -delta * moveSpeed);
-			if (glfwGetKey(device.window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-				scene.getMainCamera()->addViewPosition(delta * moveSpeed, 0, 0);
-			if (glfwGetKey(device.window, GLFW_KEY_LEFT) == GLFW_PRESS)
-				scene.getMainCamera()->addViewPosition(-delta * moveSpeed, 0, 0);
+		// key event
+		{
 			if (glfwGetKey(device.window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 				exit(0);
 			if (glfwGetKey(device.window, GLFW_KEY_1) == GLFW_PRESS)
@@ -447,8 +472,10 @@ int main() {
 				scene.setMainCamera(camera2);
 		}
 
+		// render
 		device.render(&scene);
 
+		// loop end process
 		imguiDevice.loopEndProcess();
 		device.loopEndProcess();
 	}

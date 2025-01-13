@@ -14,6 +14,7 @@
 #include "Scene.hpp"
 #include "Mesh.hpp"
 #include "Light.hpp"
+#include "ICamera.hpp"
 
 #define SHADER_PATH "../src/shader/"
 
@@ -136,7 +137,7 @@ namespace CGL {
 			void setMouseMode(MouseType mouseType);
 
 			void render(Scene* scene);
-			void registerCamera(Camera* camera);
+			void registerCamera(ICamera* camera);
 			void recursiveRegisterMesh(IObject3D* object);
 			void registerLight(LightBuffers& lightBuffers);
 			void recursiveRegisterLight(CGL::IObject3D* object, LightBuffers& lightBuffers);
