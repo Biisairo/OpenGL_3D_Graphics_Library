@@ -12,7 +12,7 @@
 #define STB_IMAGE_USE 0
 #define ASSIMP_USE 0
 #define SPDLOG_USE 0
-#define IMGUI_USE 0
+#define IMGUI_USE 1
 
 // opengl
 #if GLFW_USE && GLAD_USE

@@ -11,7 +11,7 @@ set(GLM_USE 1)
 set(STB_IMAGE_USE 0)
 set(ASSIMP_USE 0)
 set(SPDLOG_USE 0)
-set(IMGUI_USE 0)
+set(IMGUI_USE 1)
 
 # set project
 project(

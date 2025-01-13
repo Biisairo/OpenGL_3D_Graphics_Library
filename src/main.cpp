@@ -6,6 +6,11 @@
 #include "Light.hpp"
 #include "Device.hpp"
 #include "Material.hpp"
+#include "ImguiDevice.hpp"
+
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
 
 int main() {
 	int width = 800;
@@ -17,7 +22,9 @@ int main() {
 	glfwGetWindowSize(device.window, &width, &height);
 
 	CGL::Scene scene;
-	
+
+	CGL::ImguiDevice imguiDevice(device);
+
 	CGL::Mesh* cor = new CGL::Mesh();
 	{
 		std::vector<glm::vec3> vertex;
@@ -399,6 +406,12 @@ int main() {
 
 	while (1) {
 		device.loopBeginProcess();
+		imguiDevice.loopBeginProcess();
+
+        // GUI 구성
+        ImGui::Begin("Hello, ImGui!");
+        ImGui::Text("This is a simple text");
+        ImGui::End();
 
 		double now = glfwGetTime();
 		double delta = now - before;
@@ -436,6 +449,7 @@ int main() {
 
 		device.render(&scene);
 
+		imguiDevice.loopEndProcess();
 		device.loopEndProcess();
 	}
 }
