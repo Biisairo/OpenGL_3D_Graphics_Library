@@ -1,9 +1,9 @@
 #ifndef IFRAMEBUFFER_HPP
 #define IFRAMEBUFFER_HPP
 
-#include <glad/glad.h>
+#include "Extern/OpenGLHeader.hpp"
 
-class iFramebuffer{
+class IFramebuffer{
 
 	protected:
 
@@ -15,10 +15,10 @@ class iFramebuffer{
 
 	public:
 
-		// iFramebuffer();
-		// virtual ~iFramebuffer();
-		// virtual iFramebuffer(const iFramebuffer& other);
-		// virtual iFramebuffer& operator=(const iFramebuffer& other);
+		// IFramebuffer();
+		// virtual ~IFramebuffer();
+		// virtual IFramebuffer(const IFramebuffer& other);
+		// virtual IFramebuffer& operator=(const IFramebuffer& other);
 		void use();
 		GLuint getTexture();
 

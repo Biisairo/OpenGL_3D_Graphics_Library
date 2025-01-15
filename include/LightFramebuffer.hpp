@@ -1,9 +1,9 @@
 #ifndef LIGHTFRAMEBUFFER_HPP
 #define LIGHTFRAMEBUFFER_HPP
 
-#include <iFramebuffer.hpp>
+#include "Extern/OpenGLHeader.hpp"
 
-#include <glad/glad.h>
+#include <iFramebuffer.hpp>
 
 #include <iostream>
 
