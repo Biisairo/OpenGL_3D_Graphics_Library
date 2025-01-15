@@ -68,11 +68,12 @@ CGL::IObject3D* CGL::IObject3D::removeChild(objectID ID) {
 	CGL::IObject3D* target = this->findChild(ID);
 	if (target == nullptr)
 		return nullptr;
-	
+
 	CGL::IObject3D* targetParent = target->parent;
 	for (std::vector<IObject3D*>::iterator it = targetParent->children.begin(); it != targetParent->children.end(); it++) {
 		if (*it == target) {
 			targetParent->children.erase(it);
+			break;
 		}
 	}
 	

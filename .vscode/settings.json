@@ -95,7 +95,8 @@
 		"unordered_set": "cpp",
 		"charconv": "cpp",
 		"memory_resource": "cpp",
-		"execution": "cpp"
+		"execution": "cpp",
+		"__memory": "cpp"
 	},
 	"C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
 }

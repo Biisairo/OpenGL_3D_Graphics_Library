@@ -15,6 +15,8 @@ namespace CGL {
 			ImguiDevice(const ImguiDevice& other) = delete;
 			ImguiDevice& operator=(const ImguiDevice& other) = delete;
 
+			ImGuiIO& getImGuiIO();
+
 			void loopBeginProcess();
 			void loopEndProcess();
 

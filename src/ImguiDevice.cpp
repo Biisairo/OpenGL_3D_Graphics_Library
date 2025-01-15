@@ -4,8 +4,6 @@ CGL::ImguiDevice::ImguiDevice(CGL::Device& device) {
 	// ImGui 초기화
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-	(void)io;
 
     // ImGui 스타일 설정 (선택 사항)
     ImGui::StyleColorsDark();
@@ -23,6 +21,10 @@ CGL::ImguiDevice::~ImguiDevice() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ImGuiIO& CGL::ImguiDevice::getImGuiIO() {
+    return ImGui::GetIO();
+}
 
 void CGL::ImguiDevice::loopBeginProcess() {
     ImGui_ImplOpenGL3_NewFrame();
