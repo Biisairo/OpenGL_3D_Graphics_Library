@@ -1,18 +1,18 @@
 #include <IFramebuffer.hpp>
 
-// IFramebuffer::IFramebuffer() {}
+// CGL::IFramebuffer::CGL::IFramebuffer() {}
 
-// IFramebuffer::~IFramebuffer() {}
+// CGL::IFramebuffer::~CGL::IFramebuffer() {}
 
-// IFramebuffer::IFramebuffer(const IFramebuffer& other) {}
+// CGL::IFramebuffer::CGL::IFramebuffer(const CGL::IFramebuffer& other) {}
 
-// IFramebuffer& IFramebuffer::operator=(const IFramebuffer& other) {
+// CGL::IFramebuffer& CGL::IFramebuffer::operator=(const CGL::IFramebuffer& other) {
 // 	if (this == &other)
 // 		return *this;
 // 	return *this;
 // }
 
-void IFramebuffer::setError() {
+void CGL::IFramebuffer::setError() {
 	glDeleteFramebuffers(1, &this->framebuffer);
 	glDeleteTextures(1, &this->texture);
 	glDeleteRenderbuffers(1, &this->renderbuffer);
@@ -21,10 +21,10 @@ void IFramebuffer::setError() {
 	this->renderbuffer = 0;
 }
 
-void IFramebuffer::use() {
+void CGL::IFramebuffer::use() {
 	glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
 }
 
-GLuint IFramebuffer::getTexture() {
+GLuint CGL::IFramebuffer::getTexture() {
 	return this->texture;
 }

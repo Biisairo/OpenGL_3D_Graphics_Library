@@ -10,6 +10,7 @@
 #include "Extern/GLMHeader.hpp"
 #include "Extern/OpenGLHeader.hpp"
 
+#include "FramebufferManager.hpp"
 #include "IResourceID.hpp"
 #include "Scene.hpp"
 #include "Mesh.hpp"
@@ -66,7 +67,7 @@ namespace CGL {
 		MaterialBuffer materialBuffer;
 	};
 
-	struct LightBuffer {
+	struct alignas(16) LightBuffer {
 		uint emitType;
 		// 0 directional light
 		// 1 point light
@@ -120,6 +121,8 @@ namespace CGL {
 			std::unordered_map<std::string, UniformBlock> uniformBlocks;
 			std::unordered_map<programHash, GLuint> programs;
 
+			FramebufferManager framebufferManager;
+
 		// device
 		public:
 			Device(const Device& other) = delete;
@@ -138,6 +141,7 @@ namespace CGL {
 
 			void render(Scene* scene);
 			void registerCamera(ICamera* camera);
+			// void registervLightView(Light* light);
 			void recursiveRegisterMesh(IObject3D* object);
 			void registerLight(LightBuffers& lightBuffers);
 			void recursiveRegisterLight(CGL::IObject3D* object, LightBuffers& lightBuffers);
@@ -146,6 +150,7 @@ namespace CGL {
 		private:
 			Device();
 			~Device();
+			// void drawShadow(objectID ID, glm::mat4 model);
 
 		// mesh
 		public:

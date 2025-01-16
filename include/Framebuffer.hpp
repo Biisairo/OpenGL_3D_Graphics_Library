@@ -1,15 +1,15 @@
-#ifndef LIGHTFRAMEBUFFER_HPP
-#define LIGHTFRAMEBUFFER_HPP
-
-#include "Extern/OpenGLHeader.hpp"
+#ifndef FRAMEBUFFER_HPP
+#define FRAMEBUFFER_HPP
 
 #include <IFramebuffer.hpp>
+
+#include <glad/glad.h>
 
 #include <iostream>
 
 namespace CGL {
 
-	class LightFramebuffer : public IFramebuffer {
+	class Framebuffer : public IFramebuffer {
 
 		private:
 
@@ -21,8 +21,8 @@ namespace CGL {
 
 		public:
 
-			LightFramebuffer() = delete;
-			LightFramebuffer(GLsizei witdh, GLsizei height);
+			Framebuffer() = delete;
+			Framebuffer(GLsizei width, GLsizei height, bool Alpha, int HDR);
 			// ~Framebuffer();
 			// Framebuffer(const Framebuffer& other);
 			// Framebuffer& operator=(const Framebuffer& other);

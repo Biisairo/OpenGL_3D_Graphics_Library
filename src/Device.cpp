@@ -111,6 +111,12 @@ void CGL::Device::setMouseMode(MouseType mouseType) {
 }
 
 void CGL::Device::render(CGL::Scene* scene) {
+	int width, height;
+	glfwGetWindowSize(this->window, &width, &height);
+
+	if (this->framebufferManager.findFramebuffer("DefaultLightBuffer") == nullptr)
+		this->framebufferManager.addLightFramebuffer("DefaultLightBuffer", width, height);
+
 	CGL::IObject3D* root = scene->getRoot();
 	this->recursiveRegisterMesh(root);
 
@@ -119,6 +125,15 @@ void CGL::Device::render(CGL::Scene* scene) {
 	this->addUniformBlock("Lights", programs);
 	this->addUniformBlock("Material", programs);
 
+	// // render shadow
+	
+	// for (int i = 0; i < lightBuffers.lightCount; i++) {
+	// 	this->registervLightView(lightBuffers.light[i]);
+	// }
+	// // 빛을 카메라로 저장
+	// // draw shadow recersive
+
+	// render mesh
 	CGL::ICamera* camera = scene->getMainCamera();
 	this->registerCamera(camera);
 
@@ -153,6 +168,36 @@ void CGL::Device::registerCamera(CGL::ICamera* camera) {
 
 	this->getError();
 }
+
+// void CGL::Device::registervLightView(CGL::LightBuffer light) {
+// 	if (light == nullptr)
+// 		return;
+	
+// 	CGL::LightType lightType = light->getLightType();
+// 	glm::vec4 emitDirection = light->getEmitDirection();
+// 	glm::vec4 position = light->getPosition();
+// 	glm::mat4 model = light->getModel();
+	
+// 	glm::mat4 projection = camera->getProjection();
+// 	glm::mat4 view = camera->getView();
+// 	glm::vec4 viewPos = camera->getViewPos();
+
+// 	this->useUniformBlock("Matrices");
+
+// 	GLuint index = getBindingIndex("Matrices");
+
+// 	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2 + sizeof(glm::vec4), NULL, GL_STATIC_DRAW);
+
+// 	glBindBufferRange(GL_UNIFORM_BUFFER, index, this->getUniformBlockBuffer("Matrices"), 0, sizeof(glm::mat4) * 2 + sizeof(glm::vec4));
+
+// 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+// 	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+// 	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, sizeof(glm::vec4), glm::value_ptr(viewPos));
+
+// 	this->unuseUniformBlock();
+
+// 	this->getError();
+// }
 
 void CGL::Device::recursiveRegisterMesh(CGL::IObject3D* object) {
 	if(object->getObjectType() == OBJECT_MESH) {
@@ -212,6 +257,8 @@ void CGL::Device::recursiveRegisterLight(CGL::IObject3D* object, LightBuffers& l
 		CGL::Light* light = dynamic_cast<CGL::Light*>(object);
 
 		if (lightBuffers.light.size() < MAX_LIGHT_COUNT) {
+			glm::mat4 model = light->getModel();
+
 			CGL::LightBuffer lightBuffer;
 			lightBuffer.emitType = light->getLightType();
 			lightBuffer.ambientStrength = light->getAmbientStrength();
@@ -224,8 +271,8 @@ void CGL::Device::recursiveRegisterLight(CGL::IObject3D* object, LightBuffers& l
 			lightBuffer.constantAttenuation = light->getConstantAttenuation();
 			lightBuffer.linearAttenuation = light->getLinearAttenuation();
 			lightBuffer.quadraticAttenuation = light->getQuadraticAttenuation();
-			lightBuffer.position = light->getPosition();
-			lightBuffer.emitDirection = light->getEmitDirection();
+			lightBuffer.position = model * light->getPosition();
+			lightBuffer.emitDirection = model * light->getEmitDirection();
 			lightBuffer.innerCutoff = light->getInnerCutoff();
 			lightBuffer.outerCutoff = light->getOuterCutoff();
 

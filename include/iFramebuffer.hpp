@@ -3,25 +3,28 @@
 
 #include "Extern/OpenGLHeader.hpp"
 
-class IFramebuffer{
+namespace CGL {
 
-	protected:
+	class IFramebuffer{
 
-		GLuint framebuffer;
-		GLuint texture;
-		GLuint renderbuffer;
+		protected:
 
-		void setError();
+			GLuint framebuffer;
+			GLuint texture;
+			GLuint renderbuffer;
 
-	public:
+			void setError();
 
-		// IFramebuffer();
-		// virtual ~IFramebuffer();
-		// virtual IFramebuffer(const IFramebuffer& other);
-		// virtual IFramebuffer& operator=(const IFramebuffer& other);
-		void use();
-		GLuint getTexture();
+		public:
 
-};
+			// IFramebuffer();
+			// virtual ~IFramebuffer();
+			// virtual IFramebuffer(const IFramebuffer& other);
+			// virtual IFramebuffer& operator=(const IFramebuffer& other);
+			void use();
+			GLuint getTexture();
+
+	};
+}
 
 #endif

@@ -1,6 +1,6 @@
 #include <LightFramebuffer.hpp>
 
-LightFramebuffer::LightFramebuffer(GLsizei width, GLsizei height) {
+CGL::LightFramebuffer::LightFramebuffer(GLsizei width, GLsizei height) {
 	glGenFramebuffers(1, &this->framebuffer);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
@@ -35,7 +35,7 @@ LightFramebuffer::LightFramebuffer(GLsizei width, GLsizei height) {
 // 	return *this;
 // }
 
-// void LightFramebuffer::setError() {
+// void CGL::LightFramebuffer::setError() {
 // 	glDeleteFramebuffers(1, &this->framebuffer);
 // 	glDeleteTextures(1, &this->texture);
 // 	glDeleteRenderbuffers(1, &this->renderbuffer);
@@ -44,10 +44,10 @@ LightFramebuffer::LightFramebuffer(GLsizei width, GLsizei height) {
 // 	this->renderbuffer = 0;
 // }
 
-// void LightFramebuffer::use() {
+// void CGL::LightFramebuffer::use() {
 // 	glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
 // }
 
-// GLuint LightFramebuffer::getTexture() {
+// GLuint CGL::LightFramebuffer::getTexture() {
 // 	return this->texture;
 // }

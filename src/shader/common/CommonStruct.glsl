@@ -31,9 +31,6 @@ struct Light {
 	vec4 emitDirection;
 	float innerCutoff;
 	float outerCutoff;
-
-	// padding
-	float padding[2];
 };
 
 struct TangentSpace {
