@@ -49,6 +49,14 @@ void CGL::Device::createWindow(std::string const &title, int width, int height) 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
+void CGL::Device::setup() {
+	int width, height;
+	glfwGetWindowSize(this->window, &width, &height);
+	for (int i = 0; i < MAX_LIGHT_COUNT; i++) {
+		this->framebufferManager.addLightFramebuffer("ShadowMap[" + std::to_string(i) + "]", width, height);
+	}
+}
+
 void CGL::Device::loopBeginProcess() {
 	glClearColor(0.1, 0.7, 0.8, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -114,16 +122,21 @@ void CGL::Device::render(CGL::Scene* scene) {
 	int width, height;
 	glfwGetWindowSize(this->window, &width, &height);
 
-	if (this->framebufferManager.findFramebuffer("DefaultLightBuffer") == nullptr)
-		this->framebufferManager.addLightFramebuffer("DefaultLightBuffer", width, height);
-
-	CGL::IObject3D* root = scene->getRoot();
-	this->recursiveRegisterMesh(root);
-
 	std::vector<GLuint> programs = this->getAllPrograms();
 	this->addUniformBlock("Matrices", programs);
 	this->addUniformBlock("Lights", programs);
 	this->addUniformBlock("Material", programs);
+
+	std::vector<CGL::Mesh*> meshes;
+	std::vector<CGL::Light*> lights;
+
+	CGL::IObject3D* root = scene->getRoot();
+	this->getMeshes(root, meshes);
+	this->registerMeshes(meshes);
+
+	this->getLights(root, lights);
+	CGL::LightBuffers lightBuffers = this->trimLights(lights);
+	this->registerLights(lightBuffers);
 
 	// // render shadow
 	
@@ -137,11 +150,131 @@ void CGL::Device::render(CGL::Scene* scene) {
 	CGL::ICamera* camera = scene->getMainCamera();
 	this->registerCamera(camera);
 
-	CGL::LightBuffers lightBuffers;
-	this->recursiveRegisterLight(root, lightBuffers);
-	this->registerLight(lightBuffers);
+	this->drawMeshes(meshes);
+}
 
-	this->recursiveDraw(root);
+// device /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// private ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+CGL::Device::Device() {
+	;
+}
+
+CGL::Device::~Device() {
+	glfwDestroyWindow(this->window);
+	glfwTerminate();
+}
+
+void CGL::Device::getMeshes(IObject3D* object, std::vector<CGL::Mesh*>& meshes) {
+	if(object->getObjectType() == OBJECT_MESH) {
+		CGL::Mesh* mesh = dynamic_cast<CGL::Mesh*>(object);
+
+		meshes.push_back(mesh);
+	}
+
+	std::vector<CGL::IObject3D*> children = object->getChildren();
+	for (std::vector<CGL::IObject3D*>::iterator itr = children.begin(); itr != children.end(); itr++) {
+		getMeshes(*itr, meshes);
+	}
+}
+
+void CGL::Device::registerMeshes(std::vector<CGL::Mesh*>& meshes) {
+	for (std::vector<CGL::Mesh*>::iterator it = meshes.begin(); it != meshes.end(); it++) {
+		CGL::Mesh* mesh = *it;
+
+		if (mesh->needUpdate()) {
+			mesh->setVertexData();
+
+			this->updateMesh(
+				mesh->getID(),
+				mesh->getPosition(),
+				mesh->getNormal(),
+				mesh->getTexCoords(),
+				mesh->getTangent(),
+				mesh->getBitangent(),
+				mesh->getColors(),
+				mesh->getIndex(),
+				mesh->getDrawType(),
+				mesh->material.getAmbientColor(),
+				mesh->material.getDiffuseColor(),
+				mesh->material.getSpecularColor(),
+				mesh->material.getAlpha(),
+				mesh->material.getShininess()
+			);
+
+			mesh->updateDone();
+		}
+	}
+}
+
+void CGL::Device::drawMeshes(std::vector<CGL::Mesh*>& meshes) {
+	for (std::vector<CGL::Mesh*>::iterator it = meshes.begin(); it != meshes.end(); it++) {
+		this->draw((*it)->getID(), (*it)->getModel());
+	}
+}
+
+void CGL::Device::getLights(IObject3D* object, std::vector<CGL::Light*>& lights) {
+	if(object->getObjectType() == OBJECT_LIGHT) {
+		CGL::Light* light = dynamic_cast<CGL::Light*>(object);
+
+		lights.push_back(light);
+	}
+
+	std::vector<CGL::IObject3D*> children = object->getChildren();
+	for (std::vector<CGL::IObject3D*>::iterator itr = children.begin(); itr != children.end(); itr++) {
+		getLights(*itr, lights);
+	}
+}
+
+CGL::LightBuffers CGL::Device::trimLights(std::vector<CGL::Light*>& lights) {
+	CGL::LightBuffers lightBuffers;
+
+	for (std::vector<CGL::Light*>::iterator it = lights.begin(); it != lights.end(); it++) {
+		CGL::Light* light = *it;
+
+		glm::mat4 model = light->getModel();
+
+		CGL::LightBuffer lightBuffer;
+		lightBuffer.emitType = light->getLightType();
+		lightBuffer.ambientStrength = light->getAmbientStrength();
+		lightBuffer.diffuseStrength = light->getDiffuseStrength();
+		lightBuffer.specularStrength = light->getSpecularStrength();
+		lightBuffer.ambientcolor = light->getAmbientcolor();
+		lightBuffer.diffusecolor = light->getDiffusecolor();
+		lightBuffer.specularcolor = light->getSpecularcolor();
+		lightBuffer.intensity = light->getIntensity();
+		lightBuffer.constantAttenuation = light->getConstantAttenuation();
+		lightBuffer.linearAttenuation = light->getLinearAttenuation();
+		lightBuffer.quadraticAttenuation = light->getQuadraticAttenuation();
+		lightBuffer.position = model * light->getPosition();
+		lightBuffer.emitDirection = model * light->getEmitDirection();
+		lightBuffer.innerCutoff = light->getInnerCutoff();
+		lightBuffer.outerCutoff = light->getOuterCutoff();
+
+		lightBuffers.light.push_back(lightBuffer);
+		lightBuffers.lightCount = lightBuffers.light.size();
+	}
+
+	return lightBuffers;
+}
+
+void CGL::Device::registerLights(LightBuffers& lightBuffers) {
+	this->useUniformBlock("Lights");
+
+	GLuint index = getBindingIndex("Lights");
+
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(uint) * 4 + sizeof(CGL::LightBuffer) * lightBuffers.lightCount, NULL, GL_STATIC_DRAW);
+
+	glBindBufferRange(GL_UNIFORM_BUFFER, index, this->getUniformBlockBuffer("Lights"), 0, sizeof(uint) * 4 + sizeof(CGL::LightBuffer) * lightBuffers.lightCount);
+
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(uint), &(lightBuffers.lightCount));
+
+	if (lightBuffers.lightCount != 0)
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(uint) * 4, sizeof(CGL::LightBuffer) * lightBuffers.lightCount, lightBuffers.light.data());
+
+	this->unuseUniformBlock();
+
+	this->getError();
 }
 
 void CGL::Device::registerCamera(CGL::ICamera* camera) {
@@ -167,151 +300,6 @@ void CGL::Device::registerCamera(CGL::ICamera* camera) {
 	this->unuseUniformBlock();
 
 	this->getError();
-}
-
-// void CGL::Device::registervLightView(CGL::LightBuffer light) {
-// 	if (light == nullptr)
-// 		return;
-	
-// 	CGL::LightType lightType = light->getLightType();
-// 	glm::vec4 emitDirection = light->getEmitDirection();
-// 	glm::vec4 position = light->getPosition();
-// 	glm::mat4 model = light->getModel();
-	
-// 	glm::mat4 projection = camera->getProjection();
-// 	glm::mat4 view = camera->getView();
-// 	glm::vec4 viewPos = camera->getViewPos();
-
-// 	this->useUniformBlock("Matrices");
-
-// 	GLuint index = getBindingIndex("Matrices");
-
-// 	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2 + sizeof(glm::vec4), NULL, GL_STATIC_DRAW);
-
-// 	glBindBufferRange(GL_UNIFORM_BUFFER, index, this->getUniformBlockBuffer("Matrices"), 0, sizeof(glm::mat4) * 2 + sizeof(glm::vec4));
-
-// 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
-// 	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-// 	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, sizeof(glm::vec4), glm::value_ptr(viewPos));
-
-// 	this->unuseUniformBlock();
-
-// 	this->getError();
-// }
-
-void CGL::Device::recursiveRegisterMesh(CGL::IObject3D* object) {
-	if(object->getObjectType() == OBJECT_MESH) {
-		CGL::Mesh* mesh = dynamic_cast<CGL::Mesh*>(object);
-
-		if (mesh->needUpdate()) {
-			mesh->setVertexData();
-
-			this->updateMesh(
-				mesh->getID(),
-				mesh->getPosition(),
-				mesh->getNormal(),
-				mesh->getTexCoords(),
-				mesh->getTangent(),
-				mesh->getBitangent(),
-				mesh->getColors(),
-				mesh->getIndex(),
-				mesh->getDrawType(),
-				mesh->material.getAmbientColor(),
-				mesh->material.getDiffuseColor(),
-				mesh->material.getSpecularColor(),
-				mesh->material.getAlpha(),
-				mesh->material.getShininess()
-			);
-
-			mesh->updateDone();
-		}
-	}
-
-	std::vector<CGL::IObject3D*> children = object->getChildren();
-	for (std::vector<CGL::IObject3D*>::iterator itr = children.begin(); itr != children.end(); itr++) {
-		recursiveRegisterMesh(*itr);
-	}
-}
-
-void CGL::Device::registerLight(LightBuffers& lightBuffers) {
-	this->useUniformBlock("Lights");
-
-	GLuint index = getBindingIndex("Lights");
-
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(uint) * 4 + sizeof(CGL::LightBuffer) * lightBuffers.lightCount, NULL, GL_STATIC_DRAW);
-
-	glBindBufferRange(GL_UNIFORM_BUFFER, index, this->getUniformBlockBuffer("Lights"), 0, sizeof(uint) * 4 + sizeof(CGL::LightBuffer) * lightBuffers.lightCount);
-
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(uint), &(lightBuffers.lightCount));
-
-	if (lightBuffers.lightCount != 0)
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(uint) * 4, sizeof(CGL::LightBuffer) * lightBuffers.lightCount, lightBuffers.light.data());
-
-	this->unuseUniformBlock();
-
-	this->getError();
-}
-
-void CGL::Device::recursiveRegisterLight(CGL::IObject3D* object, LightBuffers& lightBuffers) {
-	if(object->getObjectType() == OBJECT_LIGHT) {
-		CGL::Light* light = dynamic_cast<CGL::Light*>(object);
-
-		if (lightBuffers.light.size() < MAX_LIGHT_COUNT) {
-			glm::mat4 model = light->getModel();
-
-			CGL::LightBuffer lightBuffer;
-			lightBuffer.emitType = light->getLightType();
-			lightBuffer.ambientStrength = light->getAmbientStrength();
-			lightBuffer.diffuseStrength = light->getDiffuseStrength();
-			lightBuffer.specularStrength = light->getSpecularStrength();
-			lightBuffer.ambientcolor = light->getAmbientcolor();
-			lightBuffer.diffusecolor = light->getDiffusecolor();
-			lightBuffer.specularcolor = light->getSpecularcolor();
-			lightBuffer.intensity = light->getIntensity();
-			lightBuffer.constantAttenuation = light->getConstantAttenuation();
-			lightBuffer.linearAttenuation = light->getLinearAttenuation();
-			lightBuffer.quadraticAttenuation = light->getQuadraticAttenuation();
-			lightBuffer.position = model * light->getPosition();
-			lightBuffer.emitDirection = model * light->getEmitDirection();
-			lightBuffer.innerCutoff = light->getInnerCutoff();
-			lightBuffer.outerCutoff = light->getOuterCutoff();
-
-			lightBuffers.light.push_back(lightBuffer);
-			lightBuffers.lightCount = lightBuffers.light.size();
-		}
-	}
-
-	std::vector<CGL::IObject3D*> children = object->getChildren();
-	for (std::vector<CGL::IObject3D*>::iterator itr = children.begin(); itr != children.end(); itr++) {
-		recursiveRegisterLight(*itr, lightBuffers);
-	}
-}
-
-void CGL::Device::recursiveDraw(CGL::IObject3D* object) {
-	CGL::ObjectType objectType = object->getObjectType();
-	if (objectType == OBJECT_MESH) {
-		this->draw(
-			object->getID(),
-			object->getModel()
-		);
-	}
-
-	std::vector<CGL::IObject3D*> children = object->getChildren();
-	for (std::vector<CGL::IObject3D*>::iterator itr = children.begin(); itr != children.end(); itr++) {
-		recursiveDraw(*itr);
-	}
-}
-
-// device /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// private ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-CGL::Device::Device() {
-	;
-}
-
-CGL::Device::~Device() {
-	glfwDestroyWindow(this->window);
-	glfwTerminate();
 }
 
 // mesh ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

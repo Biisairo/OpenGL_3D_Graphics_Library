@@ -321,6 +321,7 @@ int main() {
 	device.createWindow("hello", width, height);
 	glfwGetWindowSize(device.window, &width, &height);
 	glfwSetWindowCloseCallback(device.window, windowCloseCallback);
+	device.setup();
 
 	CGL::Scene scene;
 

@@ -131,6 +131,7 @@ namespace CGL {
 			static Device& getInstance();
 			void init();
 			void createWindow(std::string const &title, int width, int height);
+			void setup();
 
 			void loopBeginProcess();
 			void loopEndProcess();
@@ -140,17 +141,20 @@ namespace CGL {
 			void setMouseMode(MouseType mouseType);
 
 			void render(Scene* scene);
-			void registerCamera(ICamera* camera);
-			// void registervLightView(Light* light);
-			void recursiveRegisterMesh(IObject3D* object);
-			void registerLight(LightBuffers& lightBuffers);
-			void recursiveRegisterLight(CGL::IObject3D* object, LightBuffers& lightBuffers);
-			void recursiveDraw(IObject3D* object);
-
+			
 		private:
 			Device();
 			~Device();
-			// void drawShadow(objectID ID, glm::mat4 model);
+			
+			void getMeshes(IObject3D* object, std::vector<CGL::Mesh*>& meshes);
+			void registerMeshes(std::vector<CGL::Mesh*>& meshes);
+			void drawMeshes(std::vector<Mesh*>& meshes);
+
+			void getLights(IObject3D* object, std::vector<Light*>& lights);
+			LightBuffers trimLights(std::vector<Light*>& lights);
+			void registerLights(LightBuffers& lightBuffers);
+
+			void registerCamera(ICamera* camera);
 
 		// mesh
 		public:
