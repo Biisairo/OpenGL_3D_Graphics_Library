@@ -125,8 +125,10 @@ void CGL::ICamera::addViewRotate(glm::vec3 axis, float angle) {
 
 	this->addRotate(axis, angle);
 }
-
 void CGL::ICamera::addViewRotate(float xDelta, float yDelta) {
+	float originalHorizontalAngle = this->horizontalAngle;
+	float originalVerticalAngle = this->verticalAngle;
+
     horizontalAngle += xDelta;
     verticalAngle += yDelta;
 
@@ -134,18 +136,11 @@ void CGL::ICamera::addViewRotate(float xDelta, float yDelta) {
 
 	this->update();
 
-    // float yawAngle = xDelta;
-    // glm::vec3 yawAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+	float realXDelta = this->horizontalAngle - originalHorizontalAngle;
+	float realYDelta = this->verticalAngle - originalVerticalAngle;
 
-    // float pitchAngle = yDelta;
-    // glm::vec3 pitchAxis = this->right;
-
-	// glm::vec3 axis = glm::normalize(yawAxis + pitchAxis);
-    // float angle = glm::length(glm::vec2(yawAngle, pitchAngle));
-	// this->setRotate(axis, angle);
-	
-	this->addRotate(glm::vec3(0, 1, 0), xDelta);
-	this->addRotate(this->right, -yDelta);
+	this->addRotate(glm::vec3(0, 1, 0), realXDelta);
+	this->addRotate(this->right, -realYDelta);
 }
 
 void CGL::ICamera::setViewPosition(glm::vec3 position) {
