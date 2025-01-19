@@ -10,26 +10,10 @@
 namespace CGL {
 
 	class LightFramebuffer : public IFramebuffer {
-
-		private:
-
-			// GLuint framebuffer;
-			// GLuint texture;
-			// GLuint renderbuffer;
-
-			// void setError();
-
 		public:
 
 			LightFramebuffer() = delete;
 			LightFramebuffer(GLsizei witdh, GLsizei height);
-			// ~Framebuffer();
-			// Framebuffer(const Framebuffer& other);
-			// Framebuffer& operator=(const Framebuffer& other);
-
-			// void use();
-			// GLuint getTexture();
-
 	};
 }
 

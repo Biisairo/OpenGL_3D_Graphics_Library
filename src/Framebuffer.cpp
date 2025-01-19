@@ -38,30 +38,3 @@ CGL::Framebuffer::Framebuffer(GLsizei width, GLsizei height, bool Alpha = false,
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-
-// CGL::Framebuffer::~Framebuffer() {}
-
-// CGL::Framebuffer::Framebuffer(const Framebuffer& other) {}
-
-// Framebuffer& CGL::Framebuffer::operator=(const Framebuffer& other) {
-// 	if (this == &other)
-// 		return *this;
-// 	return *this;
-// }
-
-// void CGL::Framebuffer::setError() {
-// 	glDeleteFramebuffers(1, &this->framebuffer);
-// 	glDeleteTextures(1, &this->texture);
-// 	glDeleteRenderbuffers(1, &this->renderbuffer);
-// 	this->framebuffer = 0;
-// 	this->texture = 0;
-// 	this->renderbuffer = 0;
-// }
-
-// void CGL::Framebuffer::use() {
-// 	glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
-// }
-
-// GLuint CGL::Framebuffer::getTexture() {
-// 	return this->texture;
-// }

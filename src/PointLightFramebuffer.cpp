@@ -21,34 +21,3 @@ CGL::PointLightFramebuffer::PointLightFramebuffer(GLsizei width, GLsizei height)
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-
-// Framebuffer::~Framebuffer() {}
-
-// Framebuffer::Framebuffer(const Framebuffer& other) {}
-
-// Framebuffer& Framebuffer::operator=(const Framebuffer& other) {
-// 	if (this == &other)
-// 		return *this;
-// 	return *this;
-// }
-
-// void CGL::PointLightFramebuffer::setError() {
-// 	glDeleteFramebuffers(1, &this->framebuffer);
-// 	glDeleteTextures(1, &this->texture);
-// 	glDeleteRenderbuffers(1, &this->renderbuffer);
-// 	this->framebuffer = 0;
-// 	this->texture = 0;
-// 	this->renderbuffer = 0;
-// }
-
-// void CGL::PointLightFramebuffer::use() {
-// 	glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
-// }
-
-// GLuint CGL::PointLightFramebuffer::getTexture() {
-// 	return this->texture;
-// }
-
-// void CGL::PointLightFramebuffer::render(GLenum face) {
-//     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, face, this->texture, 0);
-// }

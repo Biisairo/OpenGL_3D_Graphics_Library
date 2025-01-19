@@ -9,9 +9,8 @@
 #include "Material.hpp"
 #include "ImguiDevice.hpp"
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_glfw.h>
-#include <imgui/imgui_impl_opengl3.h>
+#define WIDTH 1080
+#define HEIGHT 720
 
 CGL::Mesh* getOpenBoxMesh() {
 	CGL::Mesh* box = new CGL::Mesh();
@@ -313,19 +312,18 @@ void windowCloseCallback(GLFWwindow* window) {
 }
 
 int main() {
-	int width = 1080;
-	int height = 720;
-
 	CGL::Device& device = CGL::Device::getInstance();
 	device.init();
-	device.createWindow("hello", width, height);
-	glfwGetWindowSize(device.window, &width, &height);
+	device.createWindow("Renderer", WIDTH, HEIGHT);
 	glfwSetWindowCloseCallback(device.window, windowCloseCallback);
 	device.setup();
 
 	CGL::Scene scene;
 
 	CGL::ImguiDevice imguiDevice(device);
+
+	int width, height;
+	glfwGetWindowSize(device.window, &width, &height);
 
 	CGL::Mesh* cor = new CGL::Mesh();
 	CGL::Mesh* openBox = getOpenBoxMesh();
@@ -407,8 +405,6 @@ int main() {
 			pointLight->setInnerCutoff(glm::radians(20.f));
 			pointLight->setOuterCutoff(glm::radians(45.f));
 		}
-		
-		camera->setViewPosition(glm::vec3(0, 0, 3));
 	}
 
 	scene.addObject(cor);
@@ -436,7 +432,7 @@ int main() {
 		// loop begin process
 		device.loopBeginProcess();
 
-		if (!imguiDevice.getImGuiIO().WantCaptureMouse && moveMode) {
+		if (moveMode) {
 			processMainRenderWork(scene, before, prevXPos, prevYPos);
 		}
 

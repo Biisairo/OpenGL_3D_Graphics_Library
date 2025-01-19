@@ -24,7 +24,8 @@ struct Light {
 	float quadraticAttenuation;
 	// (1 / constant + linear × d + quadratic × d x d), d 는 거리
 
-	// multiple minus when directional light
+	mat4 projection;
+    mat4 view;
 	vec4 position;
 
 	// only for emitType 2, spotlight

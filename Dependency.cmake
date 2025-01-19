@@ -73,9 +73,16 @@ if (${STB_IMAGE_USE})
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         TEST_COMMAND ""
-        INSTALL_COMMAND ${CMAKE_COMMAND} -E copy
-            ${PROJECT_BINARY_DIR}/dep_stb-prefix/src/dep_stb/stb_image.h
-            ${DEP_INSTALL_DIR}/include/stb/stb_image.h
+        INSTALL_COMMAND
+            ${CMAKE_COMMAND} -E copy_directory
+                ${PROJECT_BINARY_DIR}/dep_stb-prefix/src/dep_stb
+                ${DEP_INSTALL_DIR}/include/stb
+            # ${CMAKE_COMMAND} -E copy
+            #     ${PROJECT_BINARY_DIR}/dep_stb-prefix/src/dep_stb/stb_image.h
+            #     ${DEP_INSTALL_DIR}/include/stb/stb_image.h
+            # COMMAND ${CMAKE_COMMAND} -E copy
+            #     ${PROJECT_BINARY_DIR}/dep_stb-prefix/src/dep_stb/stb_image_write.h
+            #     ${DEP_INSTALL_DIR}/include/stb/stb_image_write.h
     )
     set(DEP_LIST ${DEP_LIST} dep_stb)
 endif()

@@ -24,7 +24,13 @@
 #define COMMON_SHADER_VERT "vs/CameraNormal.vert"
 #define COMMON_SHADER_FRAG "fs/CameraNormal.frag"
 
-#define MAX_LIGHT_COUNT 100
+#define SHADOW_SHADER_VERT "vs/Shadow.vert"
+#define SHADOW_SHADER_FRAG "fs/Shadow.frag"
+
+#define DEFAULT_SHADER_VERT "vs/default.vert"
+#define DEFAULT_SHADER_FRAG "fs/default.frag"
+
+#define MAX_LIGHT_COUNT 10
 
 using programHash = size_t;
 
@@ -90,9 +96,10 @@ namespace CGL {
 		float quadraticAttenuation;
 		// (1 / constant + linear × d + quadratic × d x d), d 는 거리
 
-		// multiple minus when directional light
+		glm::mat4 projection;
+		glm::mat4 view;
 		glm::vec4 position;
-
+		
 		// only for emitType 2, spotlight
 		glm::vec4 emitDirection;
 		float innerCutoff;
@@ -145,7 +152,7 @@ namespace CGL {
 		private:
 			Device();
 			~Device();
-			
+
 			void getMeshes(IObject3D* object, std::vector<CGL::Mesh*>& meshes);
 			void registerMeshes(std::vector<CGL::Mesh*>& meshes);
 			void drawMeshes(std::vector<Mesh*>& meshes);
@@ -154,7 +161,16 @@ namespace CGL {
 			LightBuffers trimLights(std::vector<Light*>& lights);
 			void registerLights(LightBuffers& lightBuffers);
 
+			void registerLightView(LightBuffer& lightBuffer);
+
+			void drawShadows(std::vector<Mesh*>& meshes);
+
 			void registerCamera(ICamera* camera);
+
+			void drawMesh(objectID ID, glm::mat4 model);
+			void drawShadow(objectID ID, glm::mat4 model);
+
+			void drawFrameBuffer(std::string frameBufferName);
 
 		// mesh
 		public:
@@ -175,7 +191,6 @@ namespace CGL {
 				float shininess
 			);
 			void deleteMesh(objectID ID);
-			void draw(objectID ID, glm::mat4 model);
 
 		// uniform
 		public:
@@ -195,6 +210,7 @@ namespace CGL {
 			);
 			void useProgram(programHash hashCode);
 			std::vector<GLuint> getAllPrograms();
+			std::vector<programHash> getAllProgramHashes();
 
 			void setBool(programHash hashCode, std::string const &name, bool value);
 			void setInt(programHash hashCode, std::string const &name, int value);

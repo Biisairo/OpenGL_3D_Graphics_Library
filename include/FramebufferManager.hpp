@@ -12,18 +12,10 @@
 namespace CGL {
 
 	class FramebufferManager{
-
 		private:
-
 			std::map<std::string, IFramebuffer> framebuffers;
 
 		public:
-
-			// FramebufferManager();
-			// ~FramebufferManager();
-			// FramebufferManager(const FramebufferManager& other);
-			// FramebufferManager& operator=(const FramebufferManager& other);
-
 			void addFramebuffer(std::string const &name, GLsizei width, GLsizei height);
 			IFramebuffer* findFramebuffer(std::string const &name);
 			void addHDRFramebuffer(std::string const &name, GLsizei width, GLsizei height);
@@ -31,7 +23,7 @@ namespace CGL {
 			void addPointLightFramebuffer(std::string const &name, GLsizei width, GLsizei height);
 			void deleteFramebuffer(std::string const &name);
 			void useFramebuffer(std::string const &name);
-			void defaultFramebuffer();
+			void useDefaultFramebuffer();
 			GLuint getTexture(std::string const &name);
 
 	};

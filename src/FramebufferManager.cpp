@@ -1,17 +1,5 @@
 #include <FramebufferManager.hpp>
 
-// CGL::FramebufferManager::CGL::FramebufferManager() {}
-
-// CGL::FramebufferManager::~CGL::FramebufferManager() {}
-
-// CGL::FramebufferManager::CGL::FramebufferManager(const CGL::FramebufferManager& other) {}
-
-// CGL::FramebufferManager& CGL::FramebufferManager::operator=(const CGL::FramebufferManager& other) {
-// 	if (this == &other)
-// 		return *this;
-// 	return *this;
-// }
-
 void CGL::FramebufferManager::addFramebuffer(std::string const &name, GLsizei width, GLsizei height) {
 	Framebuffer tmp(width, height, false, 0);
 	this->framebuffers.insert(std::make_pair(name, tmp));
@@ -44,7 +32,7 @@ void CGL::FramebufferManager::useFramebuffer(std::string const &name) {
 	this->framebuffers.find(name)->second.use();
 }
 
-void CGL::FramebufferManager::defaultFramebuffer() {
+void CGL::FramebufferManager::useDefaultFramebuffer() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 

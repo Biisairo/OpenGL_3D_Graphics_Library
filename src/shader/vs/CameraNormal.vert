@@ -1,8 +1,5 @@
 #include <common/CommonStruct.glsl>
 
-// USE_NORMAL
-// USE_TEXCOORD
-
 uniform mat4 MODEL;
 
 layout (std140) uniform Matrices
@@ -10,6 +7,12 @@ layout (std140) uniform Matrices
     mat4 PROJECTION;
     mat4 VIEW;
 	vec4 VIEWPOS;
+};
+
+layout (std140) uniform Lights
+{
+	uint LIGHT_COUNT;
+	Light LIGHT[MAX_LIGHT_COUNT];
 };
 
 layout (location = 0) in vec3 aPos;
@@ -26,6 +29,8 @@ out Camera_VS_OUT {
 	vec3 Normal;
 
     vec2 TexCoords;
+
+    // vec4 FragPosLightSpace[MAX_LIGHT_COUNT];
 
     mat4 TBN;
 } vs_out;
@@ -60,6 +65,10 @@ void CAMERA_VNT() {
 
     vs_out.TBN = TBN;
 	vs_out.Normal = N;
+
+    // for(int i = 0; i < LIGHT_COUNT; i++) {
+    //     vs_out.FragPosLightSpace[i] = LIGHT[i].projection * LIGHT[i].view * MODEL * vec4(aPos, 1);
+    // }
         
     gl_Position = PROJECTION * VIEW * MODEL * vec4(aPos, 1.0);
 }
@@ -73,6 +82,10 @@ void CAMERA_VN() {
 
 	vec3 N = normalize(normalMatrix * aNormal);
 	vs_out.Normal = N;
+
+    // for(int i = 0; i < LIGHT_COUNT; i++) {
+    //     vs_out.FragPosLightSpace[i] = LIGHT[i].projection * LIGHT[i].view * MODEL * vec4(aPos, 1);
+    // }
 
 	gl_Position = PROJECTION * VIEW * MODEL * vec4(aPos, 1.0);
 }

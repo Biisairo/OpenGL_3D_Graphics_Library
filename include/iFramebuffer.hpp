@@ -16,11 +16,6 @@ namespace CGL {
 			void setError();
 
 		public:
-
-			// IFramebuffer();
-			// virtual ~IFramebuffer();
-			// virtual IFramebuffer(const IFramebuffer& other);
-			// virtual IFramebuffer& operator=(const IFramebuffer& other);
 			void use();
 			GLuint getTexture();
 

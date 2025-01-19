@@ -51,16 +51,20 @@ void CGL::Device::createWindow(std::string const &title, int width, int height) 
 
 void CGL::Device::setup() {
 	int width, height;
-	glfwGetWindowSize(this->window, &width, &height);
-	for (int i = 0; i < MAX_LIGHT_COUNT; i++) {
-		this->framebufferManager.addLightFramebuffer("ShadowMap[" + std::to_string(i) + "]", width, height);
-	}
+	glfwGetFramebufferSize(this->window, &width, &height);
+	
+	// for (int i = 0; i < MAX_LIGHT_COUNT; i++) {
+	// 	this->framebufferManager.addLightFramebuffer("shadowMap[" + std::to_string(i) + "]", width, height);
+	// }
+
+	// this->framebufferManager.addFramebuffer("default", width, height);
+	this->framebufferManager.addHDRFramebuffer("default", width, height);
 }
 
 void CGL::Device::loopBeginProcess() {
 	glClearColor(0.1, 0.7, 0.8, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	// glfwPollEvents();
+	glfwPollEvents();
 }
 
 void CGL::Device::loopEndProcess() {
@@ -120,12 +124,15 @@ void CGL::Device::setMouseMode(MouseType mouseType) {
 
 void CGL::Device::render(CGL::Scene* scene) {
 	int width, height;
-	glfwGetWindowSize(this->window, &width, &height);
+	glfwGetFramebufferSize(this->window, &width, &height);
 
-	std::vector<GLuint> programs = this->getAllPrograms();
-	this->addUniformBlock("Matrices", programs);
-	this->addUniformBlock("Lights", programs);
-	this->addUniformBlock("Material", programs);
+	// ready uniform
+	{
+		std::vector<GLuint> programs = this->getAllPrograms();
+		this->addUniformBlock("Matrices", programs);
+		this->addUniformBlock("Lights", programs);
+		this->addUniformBlock("Material", programs);
+	}
 
 	std::vector<CGL::Mesh*> meshes;
 	std::vector<CGL::Light*> lights;
@@ -138,19 +145,52 @@ void CGL::Device::render(CGL::Scene* scene) {
 	CGL::LightBuffers lightBuffers = this->trimLights(lights);
 	this->registerLights(lightBuffers);
 
-	// // render shadow
-	
+	// re register uniform
+	{
+		std::vector<GLuint> programs = this->getAllPrograms();
+		this->addUniformBlock("Matrices", programs);
+		this->addUniformBlock("Lights", programs);
+		this->addUniformBlock("Material", programs);
+	}
+
+	// render shadow
 	// for (int i = 0; i < lightBuffers.lightCount; i++) {
-	// 	this->registervLightView(lightBuffers.light[i]);
+	// 	this->framebufferManager.useFramebuffer("shadowMap[" + std::to_string(i) + "]");
+	// 	{
+	// 		this->registerLightView(lightBuffers.light[i]);
+	// 		this->drawShadows(meshes);
+	// 	}
+	// 	this->framebufferManager.useDefaultFramebuffer();
 	// }
-	// // 빛을 카메라로 저장
-	// // draw shadow recersive
 
 	// render mesh
 	CGL::ICamera* camera = scene->getMainCamera();
 	this->registerCamera(camera);
 
-	this->drawMeshes(meshes);
+	this->framebufferManager.useFramebuffer("default");
+	glViewport(0, 0, width, height);
+
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.1, 0.7, 0.8, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	{
+		// for (int i = 0; i < lightBuffers.lightCount; i++) {
+		// 	GLuint texture = this->framebufferManager.getTexture("shadowMap[" + std::to_string(i) + "]");
+		// 	glActiveTexture(GL_TEXTURE0 + i);
+		// 	glBindTexture(GL_TEXTURE_2D, texture);
+
+		// 	std::vector<programHash> programHashes = this->getAllProgramHashes();
+		// 	for (int programHash = 0; programHash < programHashes.size(); programHash++) {
+		// 		this->setInt(programHash, "shadowMap[" + std::to_string(i) + "]", i);
+		// 	}
+		// }
+		this->drawMeshes(meshes);
+	}
+	this->framebufferManager.useDefaultFramebuffer();
+
+
+	this->framebufferManager.useDefaultFramebuffer();
+	this->drawFrameBuffer("default");
 }
 
 // device /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -209,7 +249,7 @@ void CGL::Device::registerMeshes(std::vector<CGL::Mesh*>& meshes) {
 
 void CGL::Device::drawMeshes(std::vector<CGL::Mesh*>& meshes) {
 	for (std::vector<CGL::Mesh*>::iterator it = meshes.begin(); it != meshes.end(); it++) {
-		this->draw((*it)->getID(), (*it)->getModel());
+		this->drawMesh((*it)->getID(), (*it)->getModel());
 	}
 }
 
@@ -251,6 +291,26 @@ CGL::LightBuffers CGL::Device::trimLights(std::vector<CGL::Light*>& lights) {
 		lightBuffer.innerCutoff = light->getInnerCutoff();
 		lightBuffer.outerCutoff = light->getOuterCutoff();
 
+		int width, height;
+		glfwGetFramebufferSize(this->window, &width, &height);
+
+		CGL::LightType lightType = light->getLightType();
+
+		float nearPlane = 0.1f, farPlane = 100.f;
+
+		if (lightType == CGL::LIGHT_DIRECTIONAL)
+			lightBuffer.projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+		else if (lightType == CGL::LIGHT_SPOT)
+			lightBuffer.projection = glm::perspective(glm::radians(120.f), width / static_cast<float>(height), nearPlane, farPlane);
+		// else
+		// 	continue;
+
+		lightBuffer.view = glm::lookAt(
+			glm::vec3(lightBuffer.position),
+			glm::vec3(0.0f, 0.0f, 0.0f), 
+			glm::vec3(0.0f, 1.0f, 0.0f)
+		);
+
 		lightBuffers.light.push_back(lightBuffer);
 		lightBuffers.lightCount = lightBuffers.light.size();
 	}
@@ -258,8 +318,17 @@ CGL::LightBuffers CGL::Device::trimLights(std::vector<CGL::Light*>& lights) {
 	return lightBuffers;
 }
 
-void CGL::Device::registerLights(LightBuffers& lightBuffers) {
+void CGL::Device::registerLights(CGL::LightBuffers& lightBuffers) {
 	this->useUniformBlock("Lights");
+
+	programHash program;
+	{
+		std::unordered_map<ShaderType, std::string> shader;
+		shader.insert(std::make_pair(VERTEX_SHADER, SHADOW_SHADER_VERT));
+		shader.insert(std::make_pair(FRAGMENT_SHADER, SHADOW_SHADER_FRAG));
+		std::set<std::string> define;
+		program = this->getProgram(shader, define);
+	}
 
 	GLuint index = getBindingIndex("Lights");
 
@@ -275,6 +344,30 @@ void CGL::Device::registerLights(LightBuffers& lightBuffers) {
 	this->unuseUniformBlock();
 
 	this->getError();
+}
+
+void CGL::Device::registerLightView(CGL::LightBuffer& lightBuffer) {
+	this->useUniformBlock("Matrices");
+
+	GLuint index = getBindingIndex("Matrices");
+
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2 + sizeof(glm::vec4), NULL, GL_STATIC_DRAW);
+
+	glBindBufferRange(GL_UNIFORM_BUFFER, index, this->getUniformBlockBuffer("Matrices"), 0, sizeof(glm::mat4) * 2 + sizeof(glm::vec4));
+
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(lightBuffer.projection));
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(lightBuffer.view));
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, sizeof(glm::vec4), glm::value_ptr(lightBuffer.position));
+
+	this->unuseUniformBlock();
+
+	this->getError();
+}
+
+void CGL::Device::drawShadows(std::vector<CGL::Mesh*>& meshes) {
+	for (std::vector<CGL::Mesh*>::iterator it = meshes.begin(); it != meshes.end(); it++) {
+		this->drawShadow((*it)->getID(), (*it)->getModel());
+	}
 }
 
 void CGL::Device::registerCamera(CGL::ICamera* camera) {
@@ -299,6 +392,187 @@ void CGL::Device::registerCamera(CGL::ICamera* camera) {
 
 	this->unuseUniformBlock();
 
+	this->getError();
+}
+
+void CGL::Device::drawMesh(objectID ID, glm::mat4 model) {
+	if (this->meshes.count(ID)) {
+		GLenum glDrawType;
+
+		switch (this->meshes[ID].drawType) {
+			case DRAW_TRIANGLES:
+				glDrawType = GL_TRIANGLES;
+				break;
+			case DRAW_LINES:
+				glDrawType = GL_LINES;
+				break;
+			case DRAW_POINTS:
+				glDrawType = GL_POINTS;
+				break;
+			default:
+				glDrawType = GL_POINTS;
+				break;
+		}
+
+		this->useUniformBlock("Material");
+
+		GLuint index = getBindingIndex("Material");
+
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 3 + sizeof(float) * 4, NULL, GL_STATIC_DRAW);
+
+		glBindBufferRange(GL_UNIFORM_BUFFER, index, this->getUniformBlockBuffer("Material"), 0, sizeof(glm::vec4) * 3 + sizeof(float) * 4);
+
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), glm::value_ptr(meshes[ID].materialBuffer.ambientColor));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4), sizeof(glm::vec4), glm::value_ptr(meshes[ID].materialBuffer.diffuseColor));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 2, sizeof(glm::vec4), glm::value_ptr(meshes[ID].materialBuffer.specularColor));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 3, sizeof(float), &(meshes[ID].materialBuffer.alpha));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 3 + sizeof(float), sizeof(float), &(meshes[ID].materialBuffer.shininess));
+
+		this->unuseUniformBlock();
+
+		this->useProgram(this->meshes[ID].program);
+		this->setMat4(this->meshes[ID].program, "MODEL", model);
+		glBindVertexArray(this->meshes[ID].VAO);
+		if (this->meshes[ID].EBO == 0)
+			glDrawArrays(glDrawType, 0, this->meshes[ID].count);
+		else
+			glDrawElements(glDrawType, static_cast<unsigned int>(this->meshes[ID].count), GL_UNSIGNED_INT, NULL);
+		glBindVertexArray(0);
+		this->useProgram(0);
+	}
+
+	this->getError();
+}
+
+void CGL::Device::drawShadow(objectID ID, glm::mat4 model) {
+	if (this->meshes.count(ID)) {
+		GLenum glDrawType;
+
+		switch (this->meshes[ID].drawType) {
+			case DRAW_TRIANGLES:
+				glDrawType = GL_TRIANGLES;
+				break;
+			case DRAW_LINES:
+				glDrawType = GL_LINES;
+				break;
+			case DRAW_POINTS:
+				glDrawType = GL_POINTS;
+				break;
+			default:
+				glDrawType = GL_POINTS;
+				break;
+		}
+
+		programHash program;
+		{
+			std::unordered_map<ShaderType, std::string> shader;
+			shader.insert(std::make_pair(VERTEX_SHADER, SHADOW_SHADER_VERT));
+			shader.insert(std::make_pair(FRAGMENT_SHADER, SHADOW_SHADER_FRAG));
+			std::set<std::string> define;
+			program = this->getProgram(shader, define);
+		}
+
+		this->useProgram(program);
+		this->setMat4(program, "MODEL", model);
+		glBindVertexArray(this->meshes[ID].VAO);
+		if (this->meshes[ID].EBO == 0)
+			glDrawArrays(glDrawType, 0, this->meshes[ID].count);
+		else
+			glDrawElements(glDrawType, static_cast<unsigned int>(this->meshes[ID].count), GL_UNSIGNED_INT, NULL);
+		glBindVertexArray(0);
+		this->useProgram(0);
+	}
+
+	this->getError();
+}
+
+void CGL::Device::drawFrameBuffer(std::string frameBufferName) {
+// 	{
+// this->getError();
+// 		GLuint vao, vbo;
+
+// 		float quadVertices[] = {
+// 			// positions    // texCoords
+// 			-1.0f, -1.0f,   0.0f, 0.0f,
+// 			1.0f, -1.0f,   1.0f, 0.0f,
+// 			-1.0f,  1.0f,   0.0f, 1.0f,
+// 			1.0f,  1.0f,   1.0f, 1.0f,
+// 		};
+// this->getError();
+// 		glGenVertexArrays(1, &vao);
+// 		glGenBuffers(1, &vbo);
+// this->getError();
+// 		glBindVertexArray(vao);
+// 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+// 		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+// this->getError();
+// 		// Position attribute
+// 		glEnableVertexAttribArray(0);
+// 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+// this->getError();
+// 		// Texture coordinate attribute
+// 		glEnableVertexAttribArray(1);
+// 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+// this->getError();
+// 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+// 		glBindVertexArray(0);
+// this->getError();
+// 		// 화면 출력 프로그램 사용
+// 		programHash program;
+// 		{
+// 			std::unordered_map<ShaderType, std::string> shader;
+// 			shader.insert(std::make_pair(VERTEX_SHADER, DEFAULT_SHADER_VERT));
+// 			shader.insert(std::make_pair(FRAGMENT_SHADER, DEFAULT_SHADER_FRAG));
+// 			std::set<std::string> define;
+// 			program = this->getProgram(shader, define);
+// 		}
+// this->getError();
+// 		GLuint frameBufferID = this->framebufferManager.getTexture(frameBufferName);
+// this->getError();
+// 		this->useProgram(program);
+// this->getError();
+// 		this->setInt(program, "screenTexture", 0);
+// this->getError();
+// 		// 텍스처 활성화 및 바인딩
+// 		glActiveTexture(GL_TEXTURE0);
+// 		glBindTexture(GL_TEXTURE_2D, frameBufferID);
+// this->getError();
+// 		// 사각형 렌더링
+// 		glBindVertexArray(vao);
+// 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+// 		glBindVertexArray(0);
+// 	}
+// 	this->getError();
+// 	return;
+
+	programHash program;
+	{
+		std::unordered_map<ShaderType, std::string> shader;
+		shader.insert(std::make_pair(VERTEX_SHADER, DEFAULT_SHADER_VERT));
+		shader.insert(std::make_pair(FRAGMENT_SHADER, DEFAULT_SHADER_FRAG));
+		std::set<std::string> define;
+		program = this->getProgram(shader, define);
+	}
+	this->getError();
+
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	this->getError();
+
+	GLuint frameBufferID = this->framebufferManager.getTexture(frameBufferName);
+
+	this->useProgram(program);
+	// this->setInt(program, "screenTexture", frameBufferID);
+	this->getError();
+	glActiveTexture(GL_TEXTURE0);
+	this->getError();
+	glBindTexture(GL_TEXTURE_2D, frameBufferID);
+	this->getError();
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	this->getError();
+
+	glBindVertexArray(0);
 	this->getError();
 }
 
@@ -452,55 +726,6 @@ void CGL::Device::deleteMesh(objectID ID) {
 	}
 }
 
-void CGL::Device::draw(objectID ID, glm::mat4 model) {
-	if (this->meshes.count(ID)) {
-		GLenum glDrawType;
-
-		switch (this->meshes[ID].drawType) {
-			case DRAW_TRIANGLES:
-				glDrawType = GL_TRIANGLES;
-				break;
-			case DRAW_LINES:
-				glDrawType = GL_LINES;
-				break;
-			case DRAW_POINTS:
-				glDrawType = GL_POINTS;
-				break;
-			default:
-				glDrawType = GL_POINTS;
-				break;
-		}
-
-		this->useUniformBlock("Material");
-
-		GLuint index = getBindingIndex("Material");
-
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 3 + sizeof(float) * 4, NULL, GL_STATIC_DRAW);
-
-		glBindBufferRange(GL_UNIFORM_BUFFER, index, this->getUniformBlockBuffer("Material"), 0, sizeof(glm::vec4) * 3 + sizeof(float) * 4);
-
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), glm::value_ptr(meshes[ID].materialBuffer.ambientColor));
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4), sizeof(glm::vec4), glm::value_ptr(meshes[ID].materialBuffer.diffuseColor));
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 2, sizeof(glm::vec4), glm::value_ptr(meshes[ID].materialBuffer.specularColor));
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 3, sizeof(float), &(meshes[ID].materialBuffer.alpha));
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 3 + sizeof(float), sizeof(float), &(meshes[ID].materialBuffer.shininess));
-
-		this->unuseUniformBlock();
-
-		this->useProgram(this->meshes[ID].program);
-		this->setMat4(this->meshes[ID].program, "MODEL", model);
-		glBindVertexArray(this->meshes[ID].VAO);
-		if (this->meshes[ID].EBO == 0)
-			glDrawArrays(glDrawType, 0, this->meshes[ID].count);
-		else
-			glDrawElements(glDrawType, static_cast<unsigned int>(this->meshes[ID].count), GL_UNSIGNED_INT, NULL);
-		glBindVertexArray(0);
-		this->useProgram(0);
-	}
-
-	this->getError();
-}
-
 // uniform ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -604,8 +829,16 @@ void CGL::Device::useProgram(programHash hashCode) {
 
 std::vector<GLuint> CGL::Device::getAllPrograms() {
 	std::vector<GLuint> res;
-	for (std::unordered_map<size_t, GLuint>::iterator it = this->programs.begin(); it != this->programs.end(); it++) {
+	for (std::unordered_map<programHash, GLuint>::iterator it = this->programs.begin(); it != this->programs.end(); it++) {
 		res.push_back(it->second);
+	}
+	return res;
+}
+
+std::vector<programHash> CGL::Device::getAllProgramHashes() {
+	std::vector<programHash> res;
+	for (std::unordered_map<programHash, GLuint>::iterator it = this->programs.begin(); it != this->programs.end(); it++) {
+		res.push_back(it->first);
 	}
 	return res;
 }
