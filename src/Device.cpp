@@ -127,10 +127,9 @@ void CGL::Device::render(CGL::Scene* scene) {
 
 	// ready uniform
 	{
-		std::vector<GLuint> programs = this->getAllPrograms();
-		this->registerUniformBlock("Matrices", programs);
-		this->registerUniformBlock("Lights", programs);
-		this->registerUniformBlock("Material", programs);
+		this->addUniformBlock("Matrices");
+		this->addUniformBlock("Lights");
+		this->addUniformBlock("Material");
 	}
 
 	std::vector<CGL::Mesh*> meshes;
@@ -144,7 +143,7 @@ void CGL::Device::render(CGL::Scene* scene) {
 	CGL::LightBuffers lightBuffers = this->trimLights(lights);
 	this->registerLights(lightBuffers);
 
-	// re register uniform
+	// add uniform
 	{
 		std::vector<GLuint> programs = this->getAllPrograms();
 		this->registerUniformBlock("Matrices", programs);
@@ -362,8 +361,9 @@ CGL::LightBuffers CGL::Device::trimLights(std::vector<CGL::Light*>& lights) {
 }
 
 void CGL::Device::registerLights(CGL::LightBuffers& lightBuffers) {
+this->getError();
 	this->useUniformBlock("Lights");
-
+this->getError();
 	programHash program;
 	{
 		std::unordered_map<ShaderType, std::string> shader;
@@ -372,18 +372,18 @@ void CGL::Device::registerLights(CGL::LightBuffers& lightBuffers) {
 		std::set<std::string> define;
 		program = this->getProgram(shader, define);
 	}
-
-	GLuint index = getBindingIndex("Lights");
-
+this->getError();
+	GLuint index =this->getBindingIndex("Lights");
+this->getError();
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(uint) * 4 + sizeof(CGL::LightBuffer) * lightBuffers.lightCount, NULL, GL_STATIC_DRAW);
-
+this->getError();
 	glBindBufferRange(GL_UNIFORM_BUFFER, index, this->getUniformBlockBuffer("Lights"), 0, sizeof(uint) * 4 + sizeof(CGL::LightBuffer) * lightBuffers.lightCount);
-
+this->getError();
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(uint), &(lightBuffers.lightCount));
-
+this->getError();
 	if (lightBuffers.lightCount != 0)
 		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(uint) * 4, sizeof(CGL::LightBuffer) * lightBuffers.lightCount, lightBuffers.light.data());
-
+this->getError();
 	this->unuseUniformBlock();
 
 	this->getError();
@@ -392,7 +392,7 @@ void CGL::Device::registerLights(CGL::LightBuffers& lightBuffers) {
 void CGL::Device::registerLightView(CGL::LightBuffer& lightBuffer) {
 	this->useUniformBlock("Matrices");
 
-	GLuint index = getBindingIndex("Matrices");
+	GLuint index =this->getBindingIndex("Matrices");
 
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2 + sizeof(glm::vec4), NULL, GL_STATIC_DRAW);
 
@@ -425,7 +425,7 @@ void CGL::Device::registerCamera(CGL::ICamera* camera) {
 
 	this->useUniformBlock("Matrices");
 
-	GLuint index = getBindingIndex("Matrices");
+	GLuint index =this->getBindingIndex("Matrices");
 
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2 + sizeof(glm::vec4), NULL, GL_STATIC_DRAW);
 
@@ -461,7 +461,7 @@ void CGL::Device::drawMesh(objectID ID, glm::mat4 model) {
 
 		this->useUniformBlock("Material");
 
-		GLuint index = getBindingIndex("Material");
+		GLuint index =this->getBindingIndex("Material");
 
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * 3 + sizeof(float) * 4, NULL, GL_STATIC_DRAW);
 
@@ -737,10 +737,24 @@ void CGL::Device::deleteMesh(objectID ID) {
 // uniform ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CGL::Device::registerUniformBlock(std::string const &uniformBlockName, std::vector<GLuint> &programs) {
-	GLuint index = getBindingIndex(uniformBlockName);
+void CGL::Device::addUniformBlock(std::string const &uniformBlockName) {
+	if (this->uniformBlocks.count(uniformBlockName) == 0) {
+		GLuint index = this->getBindingIndex(uniformBlockName);
+		UniformBlock ub;
 
+		GLuint uniformBlockBuffer;
+		glGenBuffers(1, &uniformBlockBuffer);
+
+		ub.uniformBlockBuffer = uniformBlockBuffer;
+
+		this->uniformBlocks.insert(std::make_pair(uniformBlockName, ub));
+	}
+}
+
+void CGL::Device::registerUniformBlock(std::string const &uniformBlockName, std::vector<GLuint> &programs) {
 	if (this->uniformBlocks.count(uniformBlockName)) {
+		GLuint index =this->getBindingIndex(uniformBlockName);
+
 		for (int i = 0; i < programs.size(); i++) {
 			if (this->uniformBlocks[uniformBlockName].uniformBlockIndex.count(programs[i]))
 				continue;
@@ -755,25 +769,7 @@ void CGL::Device::registerUniformBlock(std::string const &uniformBlockName, std:
 			this->getError();
 		}
 	} else {
-		UniformBlock ub;
-
-		for (int i = 0; i < programs.size(); i++) {
-			GLuint id = glGetUniformBlockIndex(programs[i], uniformBlockName.c_str());
-			if (id == GL_INVALID_INDEX)
-				continue;
-
-			ub.uniformBlockIndex.insert(std::make_pair(programs[i], id));
-			glUniformBlockBinding(programs[i], id, index);
-
-			this->getError();
-		}
-
-		GLuint uniformBlockBuffer;
-		glGenBuffers(1, &uniformBlockBuffer);
-
-		ub.uniformBlockBuffer = uniformBlockBuffer;
-
-		this->uniformBlocks.insert(std::make_pair(uniformBlockName, ub));
+		std::cout << uniformBlockName << " is not added" << std::endl;
 	}
 }
 
@@ -801,15 +797,14 @@ void CGL::Device::unuseUniformBlock() {
 
 GLuint CGL::Device::getBindingIndex(std::string const &uniformBlockName) {
 	static GLuint index = 0;
-	static std::unordered_map<std::string, GLuint> indexMap;
 
-	if (indexMap.count(uniformBlockName))
-		return indexMap[uniformBlockName];
+	if (this->uniformBufferIndexMap.count(uniformBlockName))
+		return this->uniformBufferIndexMap[uniformBlockName];
 
 	GLuint res = index;
 	index = (index + 1) % GL_MAX_UNIFORM_BUFFER_BINDINGS;
 
-	indexMap.insert(std::make_pair(uniformBlockName, res));
+	this->uniformBufferIndexMap.insert(std::make_pair(uniformBlockName, res));
 	return res;
 }
 

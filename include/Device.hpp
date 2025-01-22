@@ -128,7 +128,10 @@ namespace CGL {
 		private:
 			
 			std::unordered_map<objectID, MeshBuffer> meshes;
+			
 			std::unordered_map<std::string, UniformBlock> uniformBlocks;
+			std::unordered_map<std::string, GLuint> uniformBufferIndexMap;
+			
 			std::unordered_map<programHash, GLuint> programs;
 
 			FramebufferManager framebufferManager;
@@ -198,7 +201,7 @@ namespace CGL {
 
 		// uniform
 		public:
-			// void addUniformBlock(std::string const &uniformBlockName);
+			void addUniformBlock(std::string const &uniformBlockName);
 			void registerUniformBlock(std::string const &uniformBlockName, std::vector<GLuint> &programs);
 			GLuint getUniformBlockBuffer(std::string const &uniformBlockName);
 			void deleteUniformBlock(std::string const &uniformBlockName);
