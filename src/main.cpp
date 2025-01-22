@@ -125,9 +125,10 @@ CGL::Mesh* getBoxMesh() {
 }
 
 void setImGuiWindow(CGL::Scene& scene) {
-	CGL::Device& device = CGL::Device::getInstance();
+	static std::vector<CGL::Mesh*> meshes;
+	static int idx = -1;
 
-	static CGL::Mesh* curBox = nullptr;
+	CGL::Device& device = CGL::Device::getInstance();
 
 	ImGui::Begin("Mesh Controller");
 
@@ -135,17 +136,20 @@ void setImGuiWindow(CGL::Scene& scene) {
 	if (ImGui::Button("Add Box Mesh")) {
 		CGL::Mesh* box = getBoxMesh();
 		scene.addObject(box);
-		curBox = box;
+		meshes.push_back(box);
+		idx = meshes.size() - 1;
 	}
 	ImGui::SameLine();
-	if (ImGui::Button("Delete Box Mesh")) {
-		scene.removeObject(curBox->getID());
-		delete curBox;
-		curBox = nullptr;
+	if (ImGui::Button("Delete Box Mesh") && idx != -1) {
+		CGL::Mesh* box = meshes[idx];
+		scene.removeObject(box->getID());
+		meshes.erase(meshes.begin() + idx);
+		delete meshes[idx];
+		idx = meshes.size() - 1;
 	}
 	ImGui::EndGroup();
 
-	if (curBox == nullptr) {
+	if (idx == -1) {
 		ImGui::End();
 		return;
 	}
@@ -156,104 +160,104 @@ void setImGuiWindow(CGL::Scene& scene) {
 
 	ImGui::BeginGroup();
 
-	glm::vec4 origColor = curBox->getColors()[0];
+	glm::vec4 origColor = meshes[idx]->getColors()[0];
 	if (ImGui::ColorEdit4("Pick Color", (float*)&origColor)) {
-		curBox->setColors(origColor);
+		meshes[idx]->setColors(origColor);
 	}
 
 	// translate
 	if (ImGui::Button("Translate : +x")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addTranslate(glm::vec3(1, 0, 0));
+        meshes[idx]->addTranslate(glm::vec3(1, 0, 0));
     }
 	ImGui::SameLine();
 	if (ImGui::Button("Translate : -x")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addTranslate(glm::vec3(-1, 0, 0));
+        meshes[idx]->addTranslate(glm::vec3(-1, 0, 0));
     }
 	ImGui::Spacing();
 	if (ImGui::Button("Translate : +y")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addTranslate(glm::vec3(0, 1, 0));
+        meshes[idx]->addTranslate(glm::vec3(0, 1, 0));
     }
 	ImGui::SameLine();
 	if (ImGui::Button("Translate : -y")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addTranslate(glm::vec3(0, -1, 0));
+        meshes[idx]->addTranslate(glm::vec3(0, -1, 0));
     }
 	ImGui::Spacing();
 	if (ImGui::Button("Translate : +z")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addTranslate(glm::vec3(0, 0, 1));
+        meshes[idx]->addTranslate(glm::vec3(0, 0, 1));
     }
 	ImGui::SameLine();
 	if (ImGui::Button("Translate : -z")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addTranslate(glm::vec3(0, 0, -1));
+        meshes[idx]->addTranslate(glm::vec3(0, 0, -1));
     }
 
 	// rotate
 	ImGui::Spacing();
 	if (ImGui::Button("Rotate : +x")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addRotate(glm::vec3(1, 0, 0), 10);
+        meshes[idx]->addRotate(glm::vec3(1, 0, 0), 10);
     }
 	ImGui::SameLine();
 	if (ImGui::Button("Rotate : -x")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addRotate(glm::vec3(1, 0, 0), -10);
+        meshes[idx]->addRotate(glm::vec3(1, 0, 0), -10);
     }
 	ImGui::Spacing();
 	if (ImGui::Button("Rotate : +y")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addRotate(glm::vec3(0, 1, 0), 10);
+        meshes[idx]->addRotate(glm::vec3(0, 1, 0), 10);
     }
 	ImGui::SameLine();
 	if (ImGui::Button("Rotate : -y")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addRotate(glm::vec3(0, 1, 0), -10);
+        meshes[idx]->addRotate(glm::vec3(0, 1, 0), -10);
     }
 	ImGui::Spacing();
 	if (ImGui::Button("Rotate : +z")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addRotate(glm::vec3(0, 0, 1), 10);
+        meshes[idx]->addRotate(glm::vec3(0, 0, 1), 10);
     }
 	ImGui::SameLine();
 	if (ImGui::Button("Rotate : -z")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addRotate(glm::vec3(0, 0, 1), -10);
+        meshes[idx]->addRotate(glm::vec3(0, 0, 1), -10);
     }
 
 	// scale
 	ImGui::Spacing();
 	if (ImGui::Button("Scale : +x")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addScale(glm::vec3(1.1, 1, 1));
+        meshes[idx]->addScale(glm::vec3(1.1, 1, 1));
     }
 	ImGui::SameLine();
 	if (ImGui::Button("Scale : -x")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addScale(glm::vec3(0.9, 1, 1));
+        meshes[idx]->addScale(glm::vec3(0.9, 1, 1));
     }
 	ImGui::Spacing();
 	if (ImGui::Button("Scale : +y")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addScale(glm::vec3(1, 1.1, 1));
+        meshes[idx]->addScale(glm::vec3(1, 1.1, 1));
     }
 	ImGui::SameLine();
 	if (ImGui::Button("Scale : -y")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addScale(glm::vec3(1, 0.9, 1));
+        meshes[idx]->addScale(glm::vec3(1, 0.9, 1));
     }
 	ImGui::Spacing();
 	if (ImGui::Button("Scale : +z")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addScale(glm::vec3(1, 1, 1.1));
+        meshes[idx]->addScale(glm::vec3(1, 1, 1.1));
     }
 	ImGui::SameLine();
 	if (ImGui::Button("Scale : -z")) {
         // 값이 변경될 때 수행할 작업
-        curBox->addScale(glm::vec3(1, 1, 0.9));
+        meshes[idx]->addScale(glm::vec3(1, 1, 0.9));
     }
 	ImGui::EndGroup();
 	
