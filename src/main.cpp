@@ -54,7 +54,7 @@ CGL::Mesh* getOpenBoxMesh() {
 	box->setIndex(index);
 	box->setColors(glm::vec4(1, 1, 1, 1));
 	box->setDrawType(CGL::DRAW_TRIANGLES);
-	box->setScale(glm::vec3(5, 5, 5));
+	box->setScale(glm::vec3(20, 20, 20));
 	box->setTranslate(glm::vec3(0, 0, 0));
 
 	CGL::Material material;
@@ -115,8 +115,8 @@ CGL::Mesh* getBoxMesh() {
 
 	CGL::Material material;
 	material.setAmbientColor(glm::vec3(0.1, 0.1, 0.1));
-	material.setDiffuseColor(glm::vec3(0.1, 0.3, 0.1));
-	material.setDiffuseColor(glm::vec3(0.1, 0.2, 0.1));
+	material.setDiffuseColor(glm::vec3(0.2, 0.2, 0.2));
+	material.setSpecularColor(glm::vec3(0.1, 0.1, 0.1));
 	material.setAlpha(1);
 	material.setShininess(16);
 	box->material = material;
@@ -327,9 +327,10 @@ int main() {
 
 	CGL::Mesh* cor = new CGL::Mesh();
 	CGL::Mesh* openBox = getOpenBoxMesh();
+	CGL::Mesh* defaultBox = getBoxMesh();
+	CGL::Mesh* floor = getBoxMesh();
 	CGL::Light* spotLight = new CGL::Light();
-	CGL::Light* spotLight2 = new CGL::Light();
-	CGL::Light* pointLight = new CGL::Light();
+	CGL::Light* directionLight = new CGL::Light();
 	CGL::PlayerCamera* camera = new CGL::PlayerCamera(glm::vec3(), glm::radians(180.f), 0, glm::radians(45.f), width, height);
 	{
 		{
@@ -357,61 +358,78 @@ int main() {
 			spotLight->setAmbientStrength(1);
 			spotLight->setDiffuseStrength(1);
 			spotLight->setSpecularStrength(1);
-			spotLight->setAmbientcolor(glm::vec3(0, 0.3, 0));
-			spotLight->setDiffusecolor(glm::vec3(0, 1, 0));
-			spotLight->setSpecularcolor(glm::vec3(0, 0.1, 0));
-			spotLight->setIntensity(0.8);
+			spotLight->setAmbientcolor(glm::vec3(0.3, 0.3, 0.3));
+			spotLight->setDiffusecolor(glm::vec3(0.5, 0.5, 0.5));
+			spotLight->setSpecularcolor(glm::vec3(1, 1, 1));
+			spotLight->setIntensity(0.5);
 			spotLight->setConstantAttenuation(0.01);
 			spotLight->setLinearAttenuation(0.01);
 			spotLight->setQuadraticAttenuation(0.01);
-			spotLight->setPosition(glm::vec3(0, 0, 0));
-			spotLight->setEmitDirection(glm::vec3(0, -1, 0));
-			spotLight->setInnerCutoff(glm::radians(20.f));
-			spotLight->setOuterCutoff(glm::radians(45.f));
+			float temp = 2.f;
+			spotLight->setPosition(glm::vec3(0.6 + temp, 2.1 + temp, 0.6 + temp));
+			spotLight->setEmitDirection(glm::vec3(-1, -1, -1));
+			spotLight->setInnerCutoff(glm::radians(15.f));
+			spotLight->setOuterCutoff(glm::radians(30.f));
+
+			CGL::Mesh* box = getBoxMesh();
+			box->setScale(glm::vec3(0.1, 0.1, 0.1));
+			spotLight->addChild(box);
 		}
 		
 		{
-			spotLight2->setLightType(CGL::LIGHT_SPOT);
-			spotLight2->setAmbientStrength(1);
-			spotLight2->setDiffuseStrength(1);
-			spotLight2->setSpecularStrength(1);
-			spotLight2->setAmbientcolor(glm::vec3(0.3, 0, 0));
-			spotLight2->setDiffusecolor(glm::vec3(1, 0, 0));
-			spotLight2->setSpecularcolor(glm::vec3(0.1, 0, 0));
-			spotLight2->setIntensity(0.8);
-			spotLight2->setConstantAttenuation(0.01);
-			spotLight2->setLinearAttenuation(0.01);
-			spotLight2->setQuadraticAttenuation(0.01);
-			spotLight2->setPosition(glm::vec3(0, 0, 0));
-			spotLight2->setEmitDirection(glm::vec3(0, 1, 0));
-			spotLight2->setInnerCutoff(glm::radians(20.f));
-			spotLight2->setOuterCutoff(glm::radians(45.f));
+			directionLight->setLightType(CGL::LIGHT_DIRECTIONAL);
+			directionLight->setAmbientStrength(1);
+			directionLight->setDiffuseStrength(1);
+			directionLight->setSpecularStrength(1);
+			directionLight->setAmbientcolor(glm::vec3(0.3, 0.3, 0.1));
+			directionLight->setDiffusecolor(glm::vec3(0.5, 0.5, 0.3));
+			directionLight->setSpecularcolor(glm::vec3(1, 1, 0.8));
+			directionLight->setIntensity(0.5);
+			directionLight->setConstantAttenuation(0.01);
+			directionLight->setLinearAttenuation(0.01);
+			directionLight->setQuadraticAttenuation(0.01);
+			directionLight->setPosition(glm::vec3(-50, -50, -50));
+			directionLight->setEmitDirection(glm::vec3(-1, -1, -1));
+			directionLight->setInnerCutoff(glm::radians(20.f));
+			directionLight->setOuterCutoff(glm::radians(45.f));
 		}
-		
+	
 		{
-			pointLight->setLightType(CGL::LIGHT_POINT);
-			pointLight->setAmbientStrength(1);
-			pointLight->setDiffuseStrength(1);
-			pointLight->setSpecularStrength(1);
-			pointLight->setAmbientcolor(glm::vec3(0.5, 0.5, 0.5));
-			pointLight->setDiffusecolor(glm::vec3(0.7, 0.7, 0.7));
-			pointLight->setSpecularcolor(glm::vec3(0.1, 0.1, 0.1));
-			pointLight->setIntensity(0.8);
-			pointLight->setConstantAttenuation(0.01);
-			pointLight->setLinearAttenuation(0.01);
-			pointLight->setQuadraticAttenuation(0.01);
-			pointLight->setPosition(glm::vec3(0, 5, 0));
-			pointLight->setEmitDirection(glm::vec3(0, 0, 0));
-			pointLight->setInnerCutoff(glm::radians(20.f));
-			pointLight->setOuterCutoff(glm::radians(45.f));
+			CGL::Light* cameraLight = new CGL::Light();
+			cameraLight->setLightType(CGL::LIGHT_SPOT);
+			cameraLight->setAmbientStrength(1);
+			cameraLight->setDiffuseStrength(1);
+			cameraLight->setSpecularStrength(1);
+			cameraLight->setAmbientcolor(glm::vec3(0.3, 0.3, 0.3));
+			cameraLight->setDiffusecolor(glm::vec3(0.5, 0.5, 0.5));
+			cameraLight->setSpecularcolor(glm::vec3(1, 1, 1));
+			cameraLight->setIntensity(0.5);
+			cameraLight->setConstantAttenuation(0.01);
+			cameraLight->setLinearAttenuation(0.01);
+			cameraLight->setQuadraticAttenuation(0.01);
+			cameraLight->setPosition(glm::vec3(0, -1, 0));
+			cameraLight->setEmitDirection(glm::vec3(0, 0, -1));
+			cameraLight->setInnerCutoff(glm::radians(5.f));
+			cameraLight->setOuterCutoff(glm::radians(10.f));
+
+			// camera->addChild(cameraLight);
+
+			camera->setViewPosition(glm::vec3(0.5, 2.5, 0.5));
+			camera->setViewRotate(glm::vec3(-1, -1, -1));
+		}
+	
+		{
+			defaultBox->setTranslate(glm::vec3(0, 2, 0));
+			floor->setScale(glm::vec3(50, 1, 50));
 		}
 	}
 
-	scene.addObject(cor);
-	scene.addObject(openBox);
-	scene.addObject(spotLight);
-	scene.addObject(spotLight2);
-	camera->addChild(pointLight);
+	// scene.addObject(cor);
+	// scene.addObject(openBox);
+	scene.addObject(defaultBox);
+	scene.addObject(floor);
+	// scene.addObject(spotLight);
+	scene.addObject(directionLight);
 	scene.addObject(camera);
 	scene.setMainCamera(camera);
 
@@ -429,6 +447,7 @@ int main() {
 		glfwGetCursorPos(device.window, &prevXPos, &prevYPos);
 	}
 	while (!glfwWindowShouldClose(device.window)) {
+		// spotLight->addRotate(glm::vec3(0, 1, 0), glm::radians(1.f));
 		// loop begin process
 		device.loopBeginProcess();
 

@@ -36,9 +36,6 @@ namespace CGL {
 			float quadraticAttenuation = 0;
 			// (1 / constant + linear × d + quadratic × d x d), d 는 거리
 
-			// multiple minus when directional light
-			glm::vec3 position = glm::vec3(0, 0, 0);
-
 			// only for emitType 2, spotlight
 			glm::vec3 emitDirection = glm::vec3(0, 0, 0);
 			float innerCutoff = 0;

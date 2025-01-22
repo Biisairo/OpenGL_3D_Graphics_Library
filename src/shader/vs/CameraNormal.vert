@@ -30,7 +30,7 @@ out Camera_VS_OUT {
 
     vec2 TexCoords;
 
-    // vec4 FragPosLightSpace[MAX_LIGHT_COUNT];
+    vec4 FragPosLightSpace[MAX_LIGHT_COUNT];
 
     mat4 TBN;
 } vs_out;
@@ -66,9 +66,9 @@ void CAMERA_VNT() {
     vs_out.TBN = TBN;
 	vs_out.Normal = N;
 
-    // for(int i = 0; i < LIGHT_COUNT; i++) {
-    //     vs_out.FragPosLightSpace[i] = LIGHT[i].projection * LIGHT[i].view * MODEL * vec4(aPos, 1);
-    // }
+    for(int i = 0; i < LIGHT_COUNT; i++) {
+        vs_out.FragPosLightSpace[i] = LIGHT[i].projection * LIGHT[i].view * MODEL * vec4(aPos, 1);
+    }
         
     gl_Position = PROJECTION * VIEW * MODEL * vec4(aPos, 1.0);
 }
@@ -83,9 +83,9 @@ void CAMERA_VN() {
 	vec3 N = normalize(normalMatrix * aNormal);
 	vs_out.Normal = N;
 
-    // for(int i = 0; i < LIGHT_COUNT; i++) {
-    //     vs_out.FragPosLightSpace[i] = LIGHT[i].projection * LIGHT[i].view * MODEL * vec4(aPos, 1);
-    // }
+    for(int i = 0; i < LIGHT_COUNT; i++) {
+        vs_out.FragPosLightSpace[i] = LIGHT[i].projection * LIGHT[i].view * MODEL * vec4(aPos, 1);
+    }
 
 	gl_Position = PROJECTION * VIEW * MODEL * vec4(aPos, 1.0);
 }

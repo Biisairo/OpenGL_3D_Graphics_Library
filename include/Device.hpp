@@ -30,6 +30,9 @@
 #define DEFAULT_SHADER_VERT "vs/default.vert"
 #define DEFAULT_SHADER_FRAG "fs/default.frag"
 
+#define SHADOW_TEST_VERT "vs/ShadowTest.vert"
+#define SHADOW_TEST_FRAG "fs/ShadowTest.frag"
+
 #define MAX_LIGHT_COUNT 10
 
 using programHash = size_t;
@@ -171,6 +174,7 @@ namespace CGL {
 			void drawShadow(objectID ID, glm::mat4 model);
 
 			void drawFrameBuffer(std::string frameBufferName);
+			void drawShadowBuffer(std::string frameBufferName, bool isPerspective);
 
 		// mesh
 		public:
@@ -194,7 +198,8 @@ namespace CGL {
 
 		// uniform
 		public:
-			void addUniformBlock(std::string const &uniformBlockName, std::vector<GLuint> &programs);
+			// void addUniformBlock(std::string const &uniformBlockName);
+			void registerUniformBlock(std::string const &uniformBlockName, std::vector<GLuint> &programs);
 			GLuint getUniformBlockBuffer(std::string const &uniformBlockName);
 			void deleteUniformBlock(std::string const &uniformBlockName);
 			void useUniformBlock(std::string const &uniformBlockName);

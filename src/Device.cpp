@@ -53,11 +53,10 @@ void CGL::Device::setup() {
 	int width, height;
 	glfwGetFramebufferSize(this->window, &width, &height);
 	
-	// for (int i = 0; i < MAX_LIGHT_COUNT; i++) {
-	// 	this->framebufferManager.addLightFramebuffer("shadowMap[" + std::to_string(i) + "]", width, height);
-	// }
+	for (int i = 0; i < MAX_LIGHT_COUNT; i++) {
+		this->framebufferManager.addLightFramebuffer("shadowMap[" + std::to_string(i) + "]", 1024, 1024);
+	}
 
-	// this->framebufferManager.addFramebuffer("default", width, height);
 	this->framebufferManager.addHDRFramebuffer("default", width, height);
 }
 
@@ -129,9 +128,9 @@ void CGL::Device::render(CGL::Scene* scene) {
 	// ready uniform
 	{
 		std::vector<GLuint> programs = this->getAllPrograms();
-		this->addUniformBlock("Matrices", programs);
-		this->addUniformBlock("Lights", programs);
-		this->addUniformBlock("Material", programs);
+		this->registerUniformBlock("Matrices", programs);
+		this->registerUniformBlock("Lights", programs);
+		this->registerUniformBlock("Material", programs);
 	}
 
 	std::vector<CGL::Mesh*> meshes;
@@ -148,20 +147,53 @@ void CGL::Device::render(CGL::Scene* scene) {
 	// re register uniform
 	{
 		std::vector<GLuint> programs = this->getAllPrograms();
-		this->addUniformBlock("Matrices", programs);
-		this->addUniformBlock("Lights", programs);
-		this->addUniformBlock("Material", programs);
+		this->registerUniformBlock("Matrices", programs);
+		this->registerUniformBlock("Lights", programs);
+		this->registerUniformBlock("Material", programs);
 	}
 
 	// render shadow
-	// for (int i = 0; i < lightBuffers.lightCount; i++) {
-	// 	this->framebufferManager.useFramebuffer("shadowMap[" + std::to_string(i) + "]");
-	// 	{
-	// 		this->registerLightView(lightBuffers.light[i]);
-	// 		this->drawShadows(meshes);
-	// 	}
-	// 	this->framebufferManager.useDefaultFramebuffer();
-	// }
+	for (int i = 0; i < lightBuffers.lightCount; i++) {
+		// this->framebufferManager.useFramebuffer("default");
+		// glViewport(0, 0, width, height);
+		// glEnable(GL_DEPTH_TEST);
+		// glClearColor(0.1, 0.7, 0.8, 1);
+		// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// {
+		// 	this->registerLightView(lightBuffers.light[i]);
+
+		// 	this->drawMeshes(meshes);
+		// }
+		// this->framebufferManager.useDefaultFramebuffer();
+
+		// glViewport(0, 0, width, height);
+		// glEnable(GL_DEPTH_TEST);
+		// glClearColor(0.1, 0.7, 0.8, 1);
+		// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// this->drawFrameBuffer("default");
+
+
+		this->framebufferManager.useFramebuffer("shadowMap[" + std::to_string(i) + "]");
+		glViewport(0, 0, 1024, 1024);
+		glEnable(GL_DEPTH_TEST);
+		glClear(GL_DEPTH_BUFFER_BIT);	
+		{
+			this->registerLightView(lightBuffers.light[i]);
+
+			this->drawShadows(meshes);
+		}
+		this->framebufferManager.useDefaultFramebuffer();
+
+		// glViewport(0, 0, width, height);
+		// glEnable(GL_DEPTH_TEST);
+		// glClearColor(0.1, 0.7, 0.8, 1);
+		// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// this->drawShadowBuffer("shadowMap[" + std::to_string(i) + "]", false);
+
+		// return;
+	}
 
 	// render mesh
 	CGL::ICamera* camera = scene->getMainCamera();
@@ -169,27 +201,30 @@ void CGL::Device::render(CGL::Scene* scene) {
 
 	this->framebufferManager.useFramebuffer("default");
 	glViewport(0, 0, width, height);
-
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.1, 0.7, 0.8, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	{
-		// for (int i = 0; i < lightBuffers.lightCount; i++) {
-		// 	GLuint texture = this->framebufferManager.getTexture("shadowMap[" + std::to_string(i) + "]");
-		// 	glActiveTexture(GL_TEXTURE0 + i);
-		// 	glBindTexture(GL_TEXTURE_2D, texture);
+		for (int i = 0; i < lightBuffers.lightCount; i++) {
+			GLuint texture = this->framebufferManager.getTexture("shadowMap[" + std::to_string(i) + "]");
+			glActiveTexture(GL_TEXTURE0 + i);
+			glBindTexture(GL_TEXTURE_2D, texture);
 
-		// 	std::vector<programHash> programHashes = this->getAllProgramHashes();
-		// 	for (int programHash = 0; programHash < programHashes.size(); programHash++) {
-		// 		this->setInt(programHash, "shadowMap[" + std::to_string(i) + "]", i);
-		// 	}
-		// }
+			std::vector<programHash> programHashes = this->getAllProgramHashes();
+			for (int programHash = 0; programHash < programHashes.size(); programHash++) {
+				this->setInt(programHash, "shadowMap[" + std::to_string(i) + "]", i);
+			}
+		}
 		this->drawMeshes(meshes);
 	}
 	this->framebufferManager.useDefaultFramebuffer();
 
 
 	this->framebufferManager.useDefaultFramebuffer();
+	glViewport(0, 0, width, height);
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.1, 0.7, 0.8, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	this->drawFrameBuffer("default");
 }
 
@@ -274,6 +309,10 @@ CGL::LightBuffers CGL::Device::trimLights(std::vector<CGL::Light*>& lights) {
 
 		glm::mat4 model = light->getModel();
 
+		glm::mat4 parentModel = glm::mat4(1);
+		if (light->getParent() != nullptr)
+			parentModel = light->getParent()->getModel();
+
 		CGL::LightBuffer lightBuffer;
 		lightBuffer.emitType = light->getLightType();
 		lightBuffer.ambientStrength = light->getAmbientStrength();
@@ -286,28 +325,32 @@ CGL::LightBuffers CGL::Device::trimLights(std::vector<CGL::Light*>& lights) {
 		lightBuffer.constantAttenuation = light->getConstantAttenuation();
 		lightBuffer.linearAttenuation = light->getLinearAttenuation();
 		lightBuffer.quadraticAttenuation = light->getQuadraticAttenuation();
-		lightBuffer.position = model * light->getPosition();
-		lightBuffer.emitDirection = model * light->getEmitDirection();
+		lightBuffer.position = light->getPosition();
+		lightBuffer.emitDirection = glm::normalize(model * light->getEmitDirection());
 		lightBuffer.innerCutoff = light->getInnerCutoff();
 		lightBuffer.outerCutoff = light->getOuterCutoff();
 
-		int width, height;
-		glfwGetFramebufferSize(this->window, &width, &height);
-
 		CGL::LightType lightType = light->getLightType();
 
-		float nearPlane = 0.1f, farPlane = 100.f;
+		float near = 0.1f;
+		float far = 100.f;
+		if (lightType == CGL::LIGHT_DIRECTIONAL) {
+			float frustrumSize = 10.f;
+			lightBuffer.projection = glm::ortho(-frustrumSize, frustrumSize, -frustrumSize, frustrumSize, near, far);
+			// lightBuffer.position = glm::vec4(glm::vec3(lightBuffer.position) - 100.f * glm::vec3(lightBuffer.emitDirection), 1);
+		} else if (lightType == CGL::LIGHT_SPOT) {
+			lightBuffer.projection = glm::perspective(glm::radians(90.f), 1.f, near, far);
+		} else {
+			std::cout << "unknown light" << std::endl;
+			exit(1);
+		}
 
-		if (lightType == CGL::LIGHT_DIRECTIONAL)
-			lightBuffer.projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
-		else if (lightType == CGL::LIGHT_SPOT)
-			lightBuffer.projection = glm::perspective(glm::radians(120.f), width / static_cast<float>(height), nearPlane, farPlane);
-		// else
-		// 	continue;
-
+		glm::vec3 lightTarget = glm::vec3(lightBuffer.position) + glm::vec3(lightBuffer.emitDirection);
 		lightBuffer.view = glm::lookAt(
+			// glm::vec3(0, 0, 0) - 10.f * glm::vec3(lightBuffer.emitDirection),
+			// glm::vec3(lightBuffer.position) - 10.f * glm::vec3(lightBuffer.emitDirection),
 			glm::vec3(lightBuffer.position),
-			glm::vec3(0.0f, 0.0f, 0.0f), 
+			lightTarget,
 			glm::vec3(0.0f, 1.0f, 0.0f)
 		);
 
@@ -365,9 +408,11 @@ void CGL::Device::registerLightView(CGL::LightBuffer& lightBuffer) {
 }
 
 void CGL::Device::drawShadows(std::vector<CGL::Mesh*>& meshes) {
+	glCullFace(GL_FRONT);
 	for (std::vector<CGL::Mesh*>::iterator it = meshes.begin(); it != meshes.end(); it++) {
 		this->drawShadow((*it)->getID(), (*it)->getModel());
 	}
+	glCullFace(GL_BACK);
 }
 
 void CGL::Device::registerCamera(CGL::ICamera* camera) {
@@ -487,64 +532,6 @@ void CGL::Device::drawShadow(objectID ID, glm::mat4 model) {
 }
 
 void CGL::Device::drawFrameBuffer(std::string frameBufferName) {
-// 	{
-// this->getError();
-// 		GLuint vao, vbo;
-
-// 		float quadVertices[] = {
-// 			// positions    // texCoords
-// 			-1.0f, -1.0f,   0.0f, 0.0f,
-// 			1.0f, -1.0f,   1.0f, 0.0f,
-// 			-1.0f,  1.0f,   0.0f, 1.0f,
-// 			1.0f,  1.0f,   1.0f, 1.0f,
-// 		};
-// this->getError();
-// 		glGenVertexArrays(1, &vao);
-// 		glGenBuffers(1, &vbo);
-// this->getError();
-// 		glBindVertexArray(vao);
-// 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-// 		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-// this->getError();
-// 		// Position attribute
-// 		glEnableVertexAttribArray(0);
-// 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-// this->getError();
-// 		// Texture coordinate attribute
-// 		glEnableVertexAttribArray(1);
-// 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-// this->getError();
-// 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-// 		glBindVertexArray(0);
-// this->getError();
-// 		// 화면 출력 프로그램 사용
-// 		programHash program;
-// 		{
-// 			std::unordered_map<ShaderType, std::string> shader;
-// 			shader.insert(std::make_pair(VERTEX_SHADER, DEFAULT_SHADER_VERT));
-// 			shader.insert(std::make_pair(FRAGMENT_SHADER, DEFAULT_SHADER_FRAG));
-// 			std::set<std::string> define;
-// 			program = this->getProgram(shader, define);
-// 		}
-// this->getError();
-// 		GLuint frameBufferID = this->framebufferManager.getTexture(frameBufferName);
-// this->getError();
-// 		this->useProgram(program);
-// this->getError();
-// 		this->setInt(program, "screenTexture", 0);
-// this->getError();
-// 		// 텍스처 활성화 및 바인딩
-// 		glActiveTexture(GL_TEXTURE0);
-// 		glBindTexture(GL_TEXTURE_2D, frameBufferID);
-// this->getError();
-// 		// 사각형 렌더링
-// 		glBindVertexArray(vao);
-// 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-// 		glBindVertexArray(0);
-// 	}
-// 	this->getError();
-// 	return;
-
 	programHash program;
 	{
 		std::unordered_map<ShaderType, std::string> shader;
@@ -563,17 +550,38 @@ void CGL::Device::drawFrameBuffer(std::string frameBufferName) {
 	GLuint frameBufferID = this->framebufferManager.getTexture(frameBufferName);
 
 	this->useProgram(program);
-	// this->setInt(program, "screenTexture", frameBufferID);
-	this->getError();
 	glActiveTexture(GL_TEXTURE0);
-	this->getError();
 	glBindTexture(GL_TEXTURE_2D, frameBufferID);
-	this->getError();
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	this->getError();
 
 	glBindVertexArray(0);
+}
+
+void CGL::Device::drawShadowBuffer(std::string frameBufferName, bool isPerspective) {
+	programHash program;
+	{
+		std::unordered_map<ShaderType, std::string> shader;
+		shader.insert(std::make_pair(VERTEX_SHADER, SHADOW_TEST_VERT));
+		shader.insert(std::make_pair(FRAGMENT_SHADER, SHADOW_TEST_FRAG));
+		std::set<std::string> define;
+		program = this->getProgram(shader, define);
+	}
 	this->getError();
+
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	this->getError();
+
+	GLuint frameBufferID = this->framebufferManager.getTexture(frameBufferName);
+
+	this->useProgram(program);
+	this->setBool(program, "PERSPECTIVE", isPerspective);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, frameBufferID);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	glBindVertexArray(0);
 }
 
 // mesh ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -729,7 +737,7 @@ void CGL::Device::deleteMesh(objectID ID) {
 // uniform ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CGL::Device::addUniformBlock(std::string const &uniformBlockName, std::vector<GLuint> &programs) {
+void CGL::Device::registerUniformBlock(std::string const &uniformBlockName, std::vector<GLuint> &programs) {
 	GLuint index = getBindingIndex(uniformBlockName);
 
 	if (this->uniformBlocks.count(uniformBlockName)) {

@@ -20,7 +20,6 @@ CGL::Light::Light(const CGL::Light& other) : IObject3D(other) {
 	this->constantAttenuation = other.constantAttenuation;
 	this->linearAttenuation = other.linearAttenuation;
 	this->quadraticAttenuation = other.quadraticAttenuation;
-	this->position = other.position;
 	this->emitDirection = other.emitDirection;
 	this->innerCutoff = other.innerCutoff;
 	this->outerCutoff = other.outerCutoff;
@@ -41,7 +40,6 @@ CGL::Light& CGL::Light::operator=(const CGL::Light& other) {
 		this->constantAttenuation = other.constantAttenuation;
 		this->linearAttenuation = other.linearAttenuation;
 		this->quadraticAttenuation = other.quadraticAttenuation;
-		this->position = other.position;
 		this->emitDirection = other.emitDirection;
 		this->innerCutoff = other.innerCutoff;
 		this->outerCutoff = other.outerCutoff;
@@ -87,8 +85,6 @@ void CGL::Light::setQuadraticAttenuation(float quadraticAttenuation) {
 	this->quadraticAttenuation = quadraticAttenuation;
 }
 void CGL::Light::setPosition(glm::vec3 position) {
-	this->position = position;
-
 	this->setTranslate(position);
 }
 void CGL::Light::setEmitDirection(glm::vec3 emitDirection) {
@@ -135,7 +131,7 @@ float CGL::Light::getQuadraticAttenuation() {
 	return this->quadraticAttenuation;
 }
 glm::vec4 CGL::Light::getPosition() {
-	return glm::vec4(this->position, 1);
+	return this->getModel() * glm::vec4(0, 0, 0, 1);
 }
 glm::vec4 CGL::Light::getEmitDirection() {
 	return glm::vec4(this->emitDirection, 0);
