@@ -135,6 +135,7 @@ namespace CGL {
 			std::unordered_map<programHash, GLuint> programs;
 
 			FramebufferManager framebufferManager;
+			std::string defaultRenderFramebufferName;
 
 		// device
 		public:
@@ -208,7 +209,7 @@ namespace CGL {
 			void useUniformBlock(std::string const &uniformBlockName);
 			void unuseUniformBlock();
 			GLuint getBindingIndex(std::string const &uniformBlockName);
-
+			void useHDR(bool isUseHDR);
 
 		// programs
 		public:

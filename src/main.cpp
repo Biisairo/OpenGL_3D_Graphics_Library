@@ -126,10 +126,18 @@ CGL::Mesh* getBoxMesh() {
 
 void setImGuiWindow(CGL::Scene& scene, std::vector<CGL::Mesh*>& meshes) {
 	static int idx = -1;
+	static bool isHDR = false;
 
 	CGL::Device& device = CGL::Device::getInstance();
 
 	ImGui::Begin("Mesh Controller");
+
+	ImGui::BeginGroup();
+	if (ImGui::Checkbox("HDR", &isHDR)) {
+        device.useHDR(isHDR);
+    }
+
+	ImGui::EndGroup();
 
 	ImGui::BeginGroup();
 	if (ImGui::Button("Add Box Mesh")) {
@@ -432,8 +440,8 @@ int main() {
 	// scene.addObject(openBox);
 	scene.addObject(defaultBox);
 	scene.addObject(floor);
-	// scene.addObject(spotLight);
-	scene.addObject(directionLight);
+	scene.addObject(spotLight);
+	// scene.addObject(directionLight);
 	scene.addObject(camera);
 	scene.setMainCamera(camera);
 

@@ -57,7 +57,9 @@ void CGL::Device::setup() {
 		this->framebufferManager.addLightFramebuffer("shadowMap[" + std::to_string(i) + "]", 1024, 1024);
 	}
 
-	this->framebufferManager.addHDRFramebuffer("default", width, height);
+	this->framebufferManager.addFramebuffer("default", width, height);
+	this->framebufferManager.addHDRFramebuffer("defaultHDR", width, height);
+	this->defaultRenderFramebufferName = "default";
 }
 
 void CGL::Device::loopBeginProcess() {
@@ -198,7 +200,7 @@ void CGL::Device::render(CGL::Scene* scene) {
 	CGL::ICamera* camera = scene->getMainCamera();
 	this->registerCamera(camera);
 
-	this->framebufferManager.useFramebuffer("default");
+	this->framebufferManager.useFramebuffer(this->defaultRenderFramebufferName);
 	glViewport(0, 0, width, height);
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.1, 0.7, 0.8, 1);
@@ -224,7 +226,7 @@ void CGL::Device::render(CGL::Scene* scene) {
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.1, 0.7, 0.8, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	this->drawFrameBuffer("default");
+	this->drawFrameBuffer(this->defaultRenderFramebufferName);
 }
 
 // device /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -806,6 +808,13 @@ GLuint CGL::Device::getBindingIndex(std::string const &uniformBlockName) {
 
 	this->uniformBufferIndexMap.insert(std::make_pair(uniformBlockName, res));
 	return res;
+}
+
+void CGL::Device::useHDR(bool isUseHDR) {
+	if (isUseHDR)
+		this->defaultRenderFramebufferName = "defaultHDR";
+	else
+		this->defaultRenderFramebufferName = "default";
 }
 
 // programs ///////////////////////////////////////////////////////////////////////////////////////////////////////////

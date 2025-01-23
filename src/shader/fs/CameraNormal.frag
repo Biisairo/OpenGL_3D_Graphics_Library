@@ -252,12 +252,12 @@ void main(){
 
     float shadow = 0.0;
 
-    #if defined(USE_NORMAL)
-    for (int i = 0; i < LIGHT_COUNT; i++) {
-        shadow += calculateShadow(i);
-    }
-    shadow /= LIGHT_COUNT;
-    #endif
+    // #if defined(USE_NORMAL)
+    // for (int i = 0; i < LIGHT_COUNT; i++) {
+    //     shadow += calculateShadow(i);
+    // }
+    // shadow /= LIGHT_COUNT;
+    // #endif
 
     FragColor = vec4(fragColor * lightColorSum.xyz * (1 - shadow), ALPHA);
 }
