@@ -7,6 +7,8 @@ uniform sampler2D normalMap;
 uniform sampler2D heightMap;
 uniform float heightScale;
 
+uniform bool IS_RENDER_SHADOW;
+
 uniform sampler2D shadowMap[MAX_LIGHT_COUNT];
 
 layout (std140) uniform Matrices
@@ -39,8 +41,6 @@ in Camera_VS_OUT {
 
     vec2 TexCoords;
 
-    vec4 FragPosLightSpace[MAX_LIGHT_COUNT];
-
     mat4 TBN;
 } fs_in;
 
@@ -48,31 +48,17 @@ out vec4 FragColor;
 
 // funtion
 
-// float calculateShadow(int index) {
-//     vec4 FragPosLightSpace = fs_in.FragPosLightSpace[index];
-
-//     vec3 projCoords = FragPosLightSpace.xyz / FragPosLightSpace.w;
-//     projCoords = projCoords * 0.5 + 0.5; // Transform to [0, 1]
-
-//     float closestDepth = texture(shadowMap[index], projCoords.xy).r;
-//     float currentDepth = projCoords.z;
-    
-//     float shadow = currentDepth > closestDepth + 0.005 ? 1.0 : 0.0;
-//     return shadow;
-// }
-
 float calculateShadow(int index) {
-    vec4 FragPosLightSpace = fs_in.FragPosLightSpace[index];
+    vec4 FragPosLightSpace = LIGHT[index].projection * LIGHT[index].view * vec4(fs_in.FragPos, 1);
     vec3 lightPos = vec3(LIGHT[index].position);
 
-	// float bias = 0.005;
 	float bias = max(0.05 * (1.0 - dot(fs_in.Normal, lightPos)), 0.005); 
 	vec3 projCoords = FragPosLightSpace.xyz / FragPosLightSpace.w;
 	projCoords = projCoords * 0.5 + 0.5;
 	float closestDepth = texture(shadowMap[index], projCoords.xy).r;
 	float currentDepth = projCoords.z;
-	// float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
-	float shadow = 0.0;
+	float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+	// float shadow = 0.0;
 	
     if(projCoords.z > 1.0)
         return shadow;
@@ -252,12 +238,14 @@ void main(){
 
     float shadow = 0.0;
 
-    // #if defined(USE_NORMAL)
-    // for (int i = 0; i < LIGHT_COUNT; i++) {
-    //     shadow += calculateShadow(i);
-    // }
-    // shadow /= LIGHT_COUNT;
-    // #endif
+    #if defined(USE_NORMAL)
+    if (IS_RENDER_SHADOW) {
+        for (int i = 0; i < LIGHT_COUNT; i++) {
+            shadow += calculateShadow(i);
+        }
+        shadow /= LIGHT_COUNT;
+    }
+    #endif
 
     FragColor = vec4(fragColor * lightColorSum.xyz * (1 - shadow), ALPHA);
 }

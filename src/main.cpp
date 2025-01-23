@@ -127,14 +127,20 @@ CGL::Mesh* getBoxMesh() {
 void setImGuiWindow(CGL::Scene& scene, std::vector<CGL::Mesh*>& meshes) {
 	static int idx = -1;
 	static bool isHDR = false;
+	static bool isShadow = false;
 
 	CGL::Device& device = CGL::Device::getInstance();
 
-	ImGui::Begin("Mesh Controller");
+	ImGui::SetNextWindowSize(ImVec2(300, 360));
+	ImGui::Begin("Mesh Controller", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
 	ImGui::BeginGroup();
 	if (ImGui::Checkbox("HDR", &isHDR)) {
         device.useHDR(isHDR);
+    }
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Shadow", &isShadow)) {
+        device.renderShadow(isShadow);
     }
 
 	ImGui::EndGroup();
@@ -156,119 +162,140 @@ void setImGuiWindow(CGL::Scene& scene, std::vector<CGL::Mesh*>& meshes) {
 	}
 	ImGui::EndGroup();
 
-	if (idx == -1) {
-		ImGui::End();
-		return;
+	if (idx != -1) {
+		ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		ImGui::BeginGroup();
+
+		glm::vec4 origColor = meshes[idx]->getColors()[0];
+		if (ImGui::ColorEdit4("Pick Color", (float*)&origColor)) {
+			meshes[idx]->setColors(origColor);
+		}
+
+		// translate
+		if (ImGui::Button("Translate : +x")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addTranslate(glm::vec3(1, 0, 0));
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Translate : -x")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addTranslate(glm::vec3(-1, 0, 0));
+		}
+		ImGui::Spacing();
+		if (ImGui::Button("Translate : +y")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addTranslate(glm::vec3(0, 1, 0));
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Translate : -y")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addTranslate(glm::vec3(0, -1, 0));
+		}
+		ImGui::Spacing();
+		if (ImGui::Button("Translate : +z")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addTranslate(glm::vec3(0, 0, 1));
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Translate : -z")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addTranslate(glm::vec3(0, 0, -1));
+		}
+
+		// rotate
+		ImGui::Spacing();
+		if (ImGui::Button("Rotate : +x")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addRotate(glm::vec3(1, 0, 0), 10);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Rotate : -x")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addRotate(glm::vec3(1, 0, 0), -10);
+		}
+		ImGui::Spacing();
+		if (ImGui::Button("Rotate : +y")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addRotate(glm::vec3(0, 1, 0), 10);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Rotate : -y")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addRotate(glm::vec3(0, 1, 0), -10);
+		}
+		ImGui::Spacing();
+		if (ImGui::Button("Rotate : +z")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addRotate(glm::vec3(0, 0, 1), 10);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Rotate : -z")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addRotate(glm::vec3(0, 0, 1), -10);
+		}
+
+		// scale
+		ImGui::Spacing();
+		if (ImGui::Button("Scale : +x")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addScale(glm::vec3(1.1, 1, 1));
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Scale : -x")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addScale(glm::vec3(0.9, 1, 1));
+		}
+		ImGui::Spacing();
+		if (ImGui::Button("Scale : +y")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addScale(glm::vec3(1, 1.1, 1));
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Scale : -y")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addScale(glm::vec3(1, 0.9, 1));
+		}
+		ImGui::Spacing();
+		if (ImGui::Button("Scale : +z")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addScale(glm::vec3(1, 1, 1.1));
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Scale : -z")) {
+			// 값이 변경될 때 수행할 작업
+			meshes[idx]->addScale(glm::vec3(1, 1, 0.9));
+		}
+
+		ImGui::EndGroup();
 	}
 
-	ImGui::Spacing();
-	ImGui::Spacing();
-	ImGui::Spacing();
-
-	ImGui::BeginGroup();
-
-	glm::vec4 origColor = meshes[idx]->getColors()[0];
-	if (ImGui::ColorEdit4("Pick Color", (float*)&origColor)) {
-		meshes[idx]->setColors(origColor);
-	}
-
-	// translate
-	if (ImGui::Button("Translate : +x")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addTranslate(glm::vec3(1, 0, 0));
-    }
-	ImGui::SameLine();
-	if (ImGui::Button("Translate : -x")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addTranslate(glm::vec3(-1, 0, 0));
-    }
-	ImGui::Spacing();
-	if (ImGui::Button("Translate : +y")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addTranslate(glm::vec3(0, 1, 0));
-    }
-	ImGui::SameLine();
-	if (ImGui::Button("Translate : -y")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addTranslate(glm::vec3(0, -1, 0));
-    }
-	ImGui::Spacing();
-	if (ImGui::Button("Translate : +z")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addTranslate(glm::vec3(0, 0, 1));
-    }
-	ImGui::SameLine();
-	if (ImGui::Button("Translate : -z")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addTranslate(glm::vec3(0, 0, -1));
-    }
-
-	// rotate
-	ImGui::Spacing();
-	if (ImGui::Button("Rotate : +x")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addRotate(glm::vec3(1, 0, 0), 10);
-    }
-	ImGui::SameLine();
-	if (ImGui::Button("Rotate : -x")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addRotate(glm::vec3(1, 0, 0), -10);
-    }
-	ImGui::Spacing();
-	if (ImGui::Button("Rotate : +y")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addRotate(glm::vec3(0, 1, 0), 10);
-    }
-	ImGui::SameLine();
-	if (ImGui::Button("Rotate : -y")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addRotate(glm::vec3(0, 1, 0), -10);
-    }
-	ImGui::Spacing();
-	if (ImGui::Button("Rotate : +z")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addRotate(glm::vec3(0, 0, 1), 10);
-    }
-	ImGui::SameLine();
-	if (ImGui::Button("Rotate : -z")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addRotate(glm::vec3(0, 0, 1), -10);
-    }
-
-	// scale
-	ImGui::Spacing();
-	if (ImGui::Button("Scale : +x")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addScale(glm::vec3(1.1, 1, 1));
-    }
-	ImGui::SameLine();
-	if (ImGui::Button("Scale : -x")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addScale(glm::vec3(0.9, 1, 1));
-    }
-	ImGui::Spacing();
-	if (ImGui::Button("Scale : +y")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addScale(glm::vec3(1, 1.1, 1));
-    }
-	ImGui::SameLine();
-	if (ImGui::Button("Scale : -y")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addScale(glm::vec3(1, 0.9, 1));
-    }
-	ImGui::Spacing();
-	if (ImGui::Button("Scale : +z")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addScale(glm::vec3(1, 1, 1.1));
-    }
-	ImGui::SameLine();
-	if (ImGui::Button("Scale : -z")) {
-        // 값이 변경될 때 수행할 작업
-        meshes[idx]->addScale(glm::vec3(1, 1, 0.9));
-    }
-	ImGui::EndGroup();
-	
 	ImGui::End();
+	
+	ImGuiStyle& style = ImGui::GetStyle();
+    ImVec2 originalWindowPadding = style.WindowPadding;
+	style.WindowPadding = ImVec2(0, 0);
+
+	int windowWidth, windowHeight;
+	glfwGetWindowSize(device.window, &windowWidth, &windowHeight);
+    ImGui::SetNextWindowSize(ImVec2(200, 100));
+	ImGui::SetNextWindowPos(ImVec2((windowWidth - 200) / 2, (windowHeight - 100) / 2));
+
+	ImGui::Begin("test", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+	
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1, 1, 1, 0.7f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1, 1, 1, 0.5f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1, 1, 1, 0.3f));
+	if (ImGui::Button("END PROGRAM", ImGui::GetContentRegionAvail())) {
+		glfwSetWindowShouldClose(device.window, GLFW_TRUE);
+    }
+	ImGui::PopStyleColor(3);
+
+	ImGui::End();
+
+	style.WindowPadding = originalWindowPadding;
 }
 
 void processMainRenderWork(CGL::Scene& scene, double& before, double& prevXPos, double& prevYPos) {

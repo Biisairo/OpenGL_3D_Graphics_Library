@@ -137,6 +137,8 @@ namespace CGL {
 			FramebufferManager framebufferManager;
 			std::string defaultRenderFramebufferName;
 
+			bool isRenderShadow = false;
+
 		// device
 		public:
 			Device(const Device& other) = delete;
@@ -176,7 +178,10 @@ namespace CGL {
 
 			void drawMesh(objectID ID, glm::mat4 model);
 			void drawShadow(objectID ID, glm::mat4 model);
+		public:
+			void renderShadow(bool isRenderShadow);
 
+		private:
 			void drawFrameBuffer(std::string frameBufferName);
 			void drawShadowBuffer(std::string frameBufferName, bool isPerspective);
 

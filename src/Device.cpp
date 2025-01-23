@@ -479,6 +479,7 @@ void CGL::Device::drawMesh(objectID ID, glm::mat4 model) {
 
 		this->useProgram(this->meshes[ID].program);
 		this->setMat4(this->meshes[ID].program, "MODEL", model);
+		this->setBool(this->meshes[ID].program, "IS_RENDER_SHADOW", this->isRenderShadow);
 		glBindVertexArray(this->meshes[ID].VAO);
 		if (this->meshes[ID].EBO == 0)
 			glDrawArrays(glDrawType, 0, this->meshes[ID].count);
@@ -531,6 +532,10 @@ void CGL::Device::drawShadow(objectID ID, glm::mat4 model) {
 	}
 
 	this->getError();
+}
+
+void CGL::Device::renderShadow(bool isRenderShadow) {
+	this->isRenderShadow = isRenderShadow;
 }
 
 void CGL::Device::drawFrameBuffer(std::string frameBufferName) {
