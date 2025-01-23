@@ -4,25 +4,12 @@
 // public /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CGL::Scene::Scene() {
-	// this->root = nullptr;
 	this->mainCamera = nullptr;
 }
 
 CGL::Scene::~Scene() {
 	;
 }
-
-// CGL::Scene::Scene(const CGL::Scene& other) {
-// 	;
-// }
-
-// CGL::Scene& CGL::Scene::operator=(const CGL::Scene& other) {
-// 	if (this != &other) {
-// 		;
-// 	}
-
-// 	return *this;
-// }
 
 CGL::IObject3D* CGL::Scene::getRoot() {
 	return &this->root;

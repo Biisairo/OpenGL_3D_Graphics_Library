@@ -124,8 +124,7 @@ CGL::Mesh* getBoxMesh() {
 	return box;
 }
 
-void setImGuiWindow(CGL::Scene& scene) {
-	static std::vector<CGL::Mesh*> meshes;
+void setImGuiWindow(CGL::Scene& scene, std::vector<CGL::Mesh*>& meshes) {
 	static int idx = -1;
 
 	CGL::Device& device = CGL::Device::getInstance();
@@ -329,6 +328,7 @@ int main() {
 	int width, height;
 	glfwGetWindowSize(device.window, &width, &height);
 
+	std::vector<CGL::Mesh*> meshes;
 	CGL::Mesh* cor = new CGL::Mesh();
 	CGL::Mesh* openBox = getOpenBoxMesh();
 	CGL::Mesh* defaultBox = getBoxMesh();
@@ -465,7 +465,7 @@ int main() {
         // GUI 구성
 		if (!moveMode) {
 			imguiDevice.loopBeginProcess();
-			setImGuiWindow(scene);
+			setImGuiWindow(scene, meshes);
 			imguiDevice.loopEndProcess();
 		}
 
@@ -487,4 +487,15 @@ int main() {
 		// loop end process
 		device.loopEndProcess();
 	}
+
+	delete cor;
+	delete openBox;
+	delete defaultBox;
+	delete floor;
+	delete spotLight;
+	delete directionLight;
+	delete camera;
+
+	for (int i = 0; i < meshes.size(); i++)
+		delete meshes[i];
 }
