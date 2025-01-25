@@ -185,11 +185,8 @@ void CGL::Mesh::updateDone() {
 // private ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CGL::Mesh::makeNormal() {
-    // 정점의 법선을 초기화하고 크기를 설정
     this->normal.resize(this->position.size(), glm::vec3(0.0f));
-    std::vector<int> counts(this->position.size(), 0);
 
-    // 각 삼각형에 대해 법선을 계산하고 정점에 누적
     for (int i = 0; i < this->index.size() / 3; i++) {
         indice idx0 = this->index[i * 3 + 0];
         indice idx1 = this->index[i * 3 + 1];
@@ -199,28 +196,22 @@ void CGL::Mesh::makeNormal() {
         glm::vec3 pos1 = this->position[idx1];
         glm::vec3 pos2 = this->position[idx2];
 
-        // 삼각형의 두 변을 구함
         glm::vec3 edge0 = pos1 - pos0;
         glm::vec3 edge1 = pos2 - pos0;
 
-        // 법선 벡터는 두 벡터의 외적(cross product)으로 계산
-        glm::vec3 normal = glm::normalize(glm::cross(edge0, edge1));
+        glm::vec3 cross = glm::cross(edge0, edge1);
+        glm::vec3 normal = glm::normalize(cross);
+        float area = glm::length(cross) * 0.5;
+        float angleBetween = glm::acos(glm::dot(edge0, edge1) / (glm::length(edge0) * glm::length(edge1)));
+        float angleRatio = angleBetween / (glm::pi<float>() * 2.f);
 
-        // 정점별로 법선 벡터를 누적
-        this->normal[idx0] += normal;
-        this->normal[idx1] += normal;
-        this->normal[idx2] += normal;
-
-        counts[idx0]++;
-        counts[idx1]++;
-        counts[idx2]++;
+        this->normal[idx0] += normal * angleRatio * area;
+        this->normal[idx1] += normal * angleRatio * area;
+        this->normal[idx2] += normal * angleRatio * area;
     }
 
-    // 누적된 법선 벡터를 정규화하여 최종 법선을 얻음
     for (int i = 0; i < this->position.size(); i++) {
-        if (counts[i] > 0) {
-            this->normal[i] = glm::normalize(this->normal[i] / (float)counts[i]);
-        }
+        this->normal[i] = glm::normalize(this->normal[i]);
     }
 }
 
@@ -273,21 +264,17 @@ void CGL::Mesh::makeTangentSpace() {
         counts[idx2]++;
     }
 
-    // 각 정점의 탄젠트와 비탄젠트를 평균화 및 정규화
     for (int i = 0; i < this->position.size(); i++) {
         if (counts[i] > 0) {
             glm::vec3& t = this->tangent[i];
             glm::vec3& b = this->bitangent[i];
             glm::vec3& n = this->normal[i];
 
-            // 탄젠트와 비탄젠트를 평균화 및 정규화
             t = glm::normalize(t / (float)counts[i]);
             b = glm::normalize(b / (float)counts[i]);
 
-            // 탄젠트 벡터가 노멀 벡터와 직교하도록 보정
             t = glm::normalize(t - glm::dot(t, n) * n);
 
-            // 비탄젠트 벡터가 노멀과 탄젠트 벡터 모두와 직교하도록 보정 (그램-슈미트 정규화)
             b = glm::normalize(b - glm::dot(b, n) * n - glm::dot(b, t) * t);
         }
     }
