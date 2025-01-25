@@ -217,6 +217,8 @@ void CGL::Device::render(CGL::Scene* scene) {
 			}
 		}
 		this->drawMeshes(meshes);
+		if (this->isCheckNormal)
+			this->drawNormals(meshes);
 	}
 	this->framebufferManager.useDefaultFramebuffer();
 
@@ -286,6 +288,12 @@ void CGL::Device::registerMeshes(std::vector<CGL::Mesh*>& meshes) {
 void CGL::Device::drawMeshes(std::vector<CGL::Mesh*>& meshes) {
 	for (std::vector<CGL::Mesh*>::iterator it = meshes.begin(); it != meshes.end(); it++) {
 		this->drawMesh((*it)->getID(), (*it)->getModel());
+	}
+}
+
+void CGL::Device::drawNormals(std::vector<CGL::Mesh*>& meshes) {
+	for (std::vector<CGL::Mesh*>::iterator it = meshes.begin(); it != meshes.end(); it++) {
+		this->drawNormal((*it)->getID(), (*it)->getModel());
 	}
 }
 
@@ -534,8 +542,55 @@ void CGL::Device::drawShadow(objectID ID, glm::mat4 model) {
 	this->getError();
 }
 
+void CGL::Device::drawNormal(objectID ID, glm::mat4 model) {
+	if (this->meshes.count(ID)) {
+		GLenum glDrawType;
+
+		switch (this->meshes[ID].drawType) {
+			case DRAW_TRIANGLES:
+				glDrawType = GL_TRIANGLES;
+				break;
+			case DRAW_LINES:
+				glDrawType = GL_LINES;
+				break;
+			case DRAW_POINTS:
+				glDrawType = GL_POINTS;
+				break;
+			default:
+				glDrawType = GL_POINTS;
+				break;
+		}
+
+		programHash program;
+		{
+			std::unordered_map<ShaderType, std::string> shader;
+			shader.insert(std::make_pair(VERTEX_SHADER, NORMAL_CHECK_SHADER_VERT));
+			shader.insert(std::make_pair(GEOMETRY_SHADER, NORMAL_CHECK_SHADER_GEO));
+			shader.insert(std::make_pair(FRAGMENT_SHADER, NORMAL_CHECK_SHADER_FRAG));
+			std::set<std::string> define;
+			program = this->getProgram(shader, define);
+		}
+
+		this->useProgram(program);
+		this->setMat4(program, "MODEL", model);
+		glBindVertexArray(this->meshes[ID].VAO);
+		if (this->meshes[ID].EBO == 0)
+			glDrawArrays(glDrawType, 0, this->meshes[ID].count);
+		else
+			glDrawElements(glDrawType, static_cast<unsigned int>(this->meshes[ID].count), GL_UNSIGNED_INT, NULL);
+		glBindVertexArray(0);
+		this->useProgram(0);
+	}
+
+	this->getError();
+}
+
 void CGL::Device::renderShadow(bool isRenderShadow) {
 	this->isRenderShadow = isRenderShadow;
+}
+
+void CGL::Device::renderNormal(bool isCheckNormal) {
+	this->isCheckNormal = isCheckNormal;
 }
 
 void CGL::Device::drawFrameBuffer(std::string frameBufferName) {

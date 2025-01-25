@@ -126,8 +126,11 @@ CGL::Mesh* getBoxMesh() {
 
 void setImGuiWindow(CGL::Scene& scene, std::vector<CGL::Mesh*>& meshes) {
 	static int idx = -1;
+
 	static bool isHDR = false;
 	static bool isShadow = false;
+	static bool isNormal = false;
+	static bool drawLine = false;
 
 	CGL::Device& device = CGL::Device::getInstance();
 
@@ -141,6 +144,10 @@ void setImGuiWindow(CGL::Scene& scene, std::vector<CGL::Mesh*>& meshes) {
 	ImGui::SameLine();
 	if (ImGui::Checkbox("Shadow", &isShadow)) {
         device.renderShadow(isShadow);
+    }
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Normal", &isNormal)) {
+        device.renderNormal(isNormal);
     }
 
 	ImGui::EndGroup();

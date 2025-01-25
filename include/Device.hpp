@@ -30,6 +30,10 @@
 #define DEFAULT_SHADER_VERT "vs/default.vert"
 #define DEFAULT_SHADER_FRAG "fs/default.frag"
 
+#define NORMAL_CHECK_SHADER_VERT "vs/checkNormal.vert"
+#define NORMAL_CHECK_SHADER_GEO "gs/checkNormal.geom"
+#define NORMAL_CHECK_SHADER_FRAG "fs/checkNormal.frag"
+
 #define SHADOW_TEST_VERT "vs/ShadowTest.vert"
 #define SHADOW_TEST_FRAG "fs/ShadowTest.frag"
 
@@ -138,6 +142,7 @@ namespace CGL {
 			std::string defaultRenderFramebufferName;
 
 			bool isRenderShadow = false;
+			bool isCheckNormal = false;
 
 		// device
 		public:
@@ -165,6 +170,7 @@ namespace CGL {
 			void getMeshes(IObject3D* object, std::vector<CGL::Mesh*>& meshes);
 			void registerMeshes(std::vector<CGL::Mesh*>& meshes);
 			void drawMeshes(std::vector<Mesh*>& meshes);
+			void drawNormals(std::vector<Mesh*>& meshes);
 
 			void getLights(IObject3D* object, std::vector<Light*>& lights);
 			LightBuffers trimLights(std::vector<Light*>& lights);
@@ -178,8 +184,10 @@ namespace CGL {
 
 			void drawMesh(objectID ID, glm::mat4 model);
 			void drawShadow(objectID ID, glm::mat4 model);
+			void drawNormal(objectID ID, glm::mat4 model);
 		public:
 			void renderShadow(bool isRenderShadow);
+			void renderNormal(bool isCheckNormal);
 
 		private:
 			void drawFrameBuffer(std::string frameBufferName);
