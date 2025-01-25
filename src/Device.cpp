@@ -174,6 +174,7 @@ void CGL::Device::render(CGL::Scene* scene) {
 
 		// this->drawFrameBuffer("default");
 
+		// return;
 
 		this->framebufferManager.useFramebuffer("shadowMap[" + std::to_string(i) + "]");
 		glViewport(0, 0, 1024, 1024);
@@ -341,26 +342,26 @@ CGL::LightBuffers CGL::Device::trimLights(std::vector<CGL::Light*>& lights) {
 
 		CGL::LightType lightType = light->getLightType();
 
-		float near = 0.1f;
-		float far = 100.f;
+		float near = 1.f;
+		float far = 50.f;
 		if (lightType == CGL::LIGHT_DIRECTIONAL) {
 			float frustrumSize = 10.f;
 			lightBuffer.projection = glm::ortho(-frustrumSize, frustrumSize, -frustrumSize, frustrumSize, near, far);
-			// lightBuffer.position = glm::vec4(glm::vec3(lightBuffer.position) - 100.f * glm::vec3(lightBuffer.emitDirection), 1);
 		} else if (lightType == CGL::LIGHT_SPOT) {
-			lightBuffer.projection = glm::perspective(glm::radians(90.f), 1.f, near, far);
+			lightBuffer.projection = glm::perspective(lightBuffer.outerCutoff * 2, 1.f, near, far);
 		} else {
-			std::cout << "unknown light" << std::endl;
-			exit(1);
+			lightBuffer.projection = glm::perspective(lightBuffer.outerCutoff * 2, 1.f, near, far);
 		}
 
 		glm::vec3 lightTarget = glm::vec3(lightBuffer.position) + glm::vec3(lightBuffer.emitDirection);
+		glm::vec3 worldUp = glm::abs(lightBuffer.emitDirection.y) > 0.99f ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+		glm::vec3 right = glm::normalize(glm::cross(worldUp, lightTarget));
+		glm::vec3 up = glm::normalize(glm::cross(lightTarget, right));
+
 		lightBuffer.view = glm::lookAt(
-			// glm::vec3(0, 0, 0) - 10.f * glm::vec3(lightBuffer.emitDirection),
-			// glm::vec3(lightBuffer.position) - 10.f * glm::vec3(lightBuffer.emitDirection),
 			glm::vec3(lightBuffer.position),
 			lightTarget,
-			glm::vec3(0.0f, 1.0f, 0.0f)
+			up
 		);
 
 		lightBuffers.light.push_back(lightBuffer);
@@ -418,11 +419,17 @@ void CGL::Device::registerLightView(CGL::LightBuffer& lightBuffer) {
 }
 
 void CGL::Device::drawShadows(std::vector<CGL::Mesh*>& meshes) {
-	glCullFace(GL_FRONT);
+	GLboolean wasFaceCullEnabled = glIsEnabled(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);
+
 	for (std::vector<CGL::Mesh*>::iterator it = meshes.begin(); it != meshes.end(); it++) {
 		this->drawShadow((*it)->getID(), (*it)->getModel());
 	}
-	glCullFace(GL_BACK);
+	if (wasFaceCullEnabled) {
+		glEnable(GL_CULL_FACE);
+	} else {
+		glDisable(GL_CULL_FACE);
+	}
 }
 
 void CGL::Device::registerCamera(CGL::ICamera* camera) {
@@ -1031,7 +1038,6 @@ programHash CGL::Device::loadProgram(
 	GLint check;
 	glGetProgramiv(id, GL_LINK_STATUS, &check);
 	if (check == GL_FALSE) {
-		// 링크 실패 시 오류 로그를 가져옵니다.
 		GLint infoLogLength = 0;
 		glGetProgramiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
 		
