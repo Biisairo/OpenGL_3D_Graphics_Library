@@ -544,22 +544,9 @@ void CGL::Device::drawShadow(objectID ID, glm::mat4 model) {
 
 void CGL::Device::drawNormal(objectID ID, glm::mat4 model) {
 	if (this->meshes.count(ID)) {
-		GLenum glDrawType;
 
-		switch (this->meshes[ID].drawType) {
-			case DRAW_TRIANGLES:
-				glDrawType = GL_TRIANGLES;
-				break;
-			case DRAW_LINES:
-				glDrawType = GL_LINES;
-				break;
-			case DRAW_POINTS:
-				glDrawType = GL_POINTS;
-				break;
-			default:
-				glDrawType = GL_POINTS;
-				break;
-		}
+		if (this->meshes[ID].drawType != DRAW_TRIANGLES)
+			return;
 
 		programHash program;
 		{
@@ -575,9 +562,9 @@ void CGL::Device::drawNormal(objectID ID, glm::mat4 model) {
 		this->setMat4(program, "MODEL", model);
 		glBindVertexArray(this->meshes[ID].VAO);
 		if (this->meshes[ID].EBO == 0)
-			glDrawArrays(glDrawType, 0, this->meshes[ID].count);
+			glDrawArrays(GL_TRIANGLES, 0, this->meshes[ID].count);
 		else
-			glDrawElements(glDrawType, static_cast<unsigned int>(this->meshes[ID].count), GL_UNSIGNED_INT, NULL);
+			glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(this->meshes[ID].count), GL_UNSIGNED_INT, NULL);
 		glBindVertexArray(0);
 		this->useProgram(0);
 	}
