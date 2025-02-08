@@ -1,4 +1,4 @@
-# BLOOMING GRACE 김동윤 과제
+# OpenGL 3D Graphics Library
 
 ## Require
 CMake
