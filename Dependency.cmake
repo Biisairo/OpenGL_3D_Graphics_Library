@@ -118,67 +118,83 @@ target_include_directories(imgui PRIVATE ${DEP_INCLUDE_DIR})
 
 add_dependencies(imgui dep_glfw)
 
-# # stb_image
-# if (${STB_IMAGE_USE})
-#     ExternalProject_Add(
-#         dep_stb
-#         GIT_REPOSITORY "https://github.com/nothings/stb"
-#         GIT_TAG "master"
-#         GIT_SHALLOW 1
-#         UPDATE_COMMAND ""
-#         PATCH_COMMAND ""
-#         CONFIGURE_COMMAND ""
-#         BUILD_COMMAND ""
-#         TEST_COMMAND ""
-#         INSTALL_COMMAND
-#             ${CMAKE_COMMAND} -E copy_directory
-#                 ${PROJECT_BINARY_DIR}/dep_stb-prefix/src/dep_stb
-#                 ${DEP_INSTALL_DIR}/include/stb
-#             # ${CMAKE_COMMAND} -E copy
-#             #     ${PROJECT_BINARY_DIR}/dep_stb-prefix/src/dep_stb/stb_image.h
-#             #     ${DEP_INSTALL_DIR}/include/stb/stb_image.h
-#             # COMMAND ${CMAKE_COMMAND} -E copy
-#             #     ${PROJECT_BINARY_DIR}/dep_stb-prefix/src/dep_stb/stb_image_write.h
-#             #     ${DEP_INSTALL_DIR}/include/stb/stb_image_write.h
-#     )
-#     set(DEP_LIST ${DEP_LIST} dep_stb)
-# endif()
+# stb_image
+ExternalProject_Add(
+    dep_stb
+    GIT_REPOSITORY "https://github.com/nothings/stb"
+    GIT_TAG "master"
+    GIT_SHALLOW 1
+    UPDATE_COMMAND ""
+    PATCH_COMMAND ""
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    TEST_COMMAND ""
+    INSTALL_COMMAND
+        ${CMAKE_COMMAND} -E copy_directory
+            ${PROJECT_BINARY_DIR}/dep_stb-prefix/src/dep_stb
+            ${DEP_INSTALL_DIR}/include/stb
+        # ${CMAKE_COMMAND} -E copy
+        #     ${PROJECT_BINARY_DIR}/dep_stb-prefix/src/dep_stb/stb_image.h
+        #     ${DEP_INSTALL_DIR}/include/stb/stb_image.h
+        # COMMAND ${CMAKE_COMMAND} -E copy
+        #     ${PROJECT_BINARY_DIR}/dep_stb-prefix/src/dep_stb/stb_image_write.h
+        #     ${DEP_INSTALL_DIR}/include/stb/stb_image_write.h
+)
 
-# # assimp
-# if (${ASSIMP_USE})
-#     ExternalProject_Add(
-#         dep_assimp
-#         GIT_REPOSITORY "https://github.com/assimp/assimp.git"
-#         GIT_TAG "master"
-#         GIT_SHALLOW 1
-#         UPDATE_COMMAND ""
-#         PATCH_COMMAND ""
-#         CMAKE_ARGS
-#             -DCMAKE_INSTALL_PREFIX=${DEP_INSTALL_DIR}
-#             -DBUILD_SHARED_LIBS=OFF
-#             -DASSIMP_BUILD_ASSIMP_TOOLS=OFF
-#             -DASSIMP_BUILD_TESTS=OFF
-#             -DASSIMP_INJECT_DEBUG_POSTFIX=OFF
-#             -DASSIMP_BUILD_ZLIB=ON
-#         TEST_COMMAND ""
-#         )
-#     set(DEP_LIST ${DEP_LIST} dep_assimp)
-#     set(DEP_LIBS ${DEP_LIBS} libassimp.a)
-#     set(DEP_LIBS ${DEP_LIBS} libzlibstatic.a)
-# endif()
+set(STB_INCLUDE ${DEP_INCLUDE_DIR}/stb)
 
-# # spdlog
-# if (${SPDLOG_USE})
-#     ExternalProject_Add(
-#         dep-spdlog
-#         GIT_REPOSITORY "https://github.com/gabime/spdlog.git"
-#         GIT_TAG "v1.x"
-#         GIT_SHALLOW 1
-#         UPDATE_COMMAND ""
-#         PATCH_COMMAND ""
-#         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${DEP_INSTALL_DIR}
-#         TEST_COMMAND ""
-#     )
-#     set(DEP_LIST ${DEP_LIST} dep-spdlog)
-#     set(DEP_LIBS ${DEP_LIBS} libspdlog.a)
-# endif()
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE ${STB_INCLUDE})
+
+add_dependencies(stb dep_stb)
+
+# assimp
+ExternalProject_Add(
+    dep_assimp
+    GIT_REPOSITORY "https://github.com/assimp/assimp.git"
+    GIT_TAG "master"
+    GIT_SHALLOW 1
+    UPDATE_COMMAND ""
+    PATCH_COMMAND ""
+    CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${DEP_INSTALL_DIR}
+        -DBUILD_SHARED_LIBS=OFF
+        -DASSIMP_BUILD_ASSIMP_TOOLS=OFF
+        -DASSIMP_BUILD_TESTS=OFF
+        -DASSIMP_INJECT_DEBUG_POSTFIX=OFF
+        -DASSIMP_BUILD_ZLIB=ON
+    TEST_COMMAND ""
+    )
+
+    set(ASSIMP_INCLUDE ${DEP_INCLUDE_DIR}/assimp)
+
+add_library(assimp INTERFACE)
+target_include_directories(assimp INTERFACE ${ASSIMP_INCLUDE})
+target_include_directories(assimp INTERFACE ${DEP_INCLUDE_DIR})
+target_link_libraries(assimp INTERFACE ${DEP_LIB_DIR}/libassimp.a)
+target_link_libraries(assimp INTERFACE ${DEP_LIB_DIR}/libzlibstatic.a)
+
+add_dependencies(assimp dep_assimp)
+
+# spdlog
+ExternalProject_Add(
+    dep-spdlog
+    GIT_REPOSITORY "https://github.com/gabime/spdlog.git"
+    GIT_TAG "v1.x"
+    GIT_SHALLOW 1
+    UPDATE_COMMAND ""
+    PATCH_COMMAND ""
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${DEP_INSTALL_DIR}
+    TEST_COMMAND ""
+)
+set(DEP_LIST ${DEP_LIST} dep-spdlog)
+set(DEP_LIBS ${DEP_LIBS} libspdlog.a)
+
+set(SPDLOG_INCLUDE ${DEP_INCLUDE_DIR}/spdlog)
+
+add_library(spdlog INTERFACE)
+target_include_directories(spdlog INTERFACE ${SPDLOG_INCLUDE})
+target_include_directories(spdlog INTERFACE ${DEP_INCLUDE_DIR})
+target_link_libraries(spdlog INTERFACE ${DEP_LIB_DIR}/libspdlog.a)
+
+add_dependencies(spdlog dep_spdlog)
