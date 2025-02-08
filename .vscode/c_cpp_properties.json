@@ -10,6 +10,9 @@
                 "${workspaceFolder}/build/install/include/glm",
                 "${workspaceFolder}/build/install/include/imgui",
                 "${workspaceFolder}/build/install/include/KHR",
+                "${workspaceFolder}/build/install/include/spdlog",
+                "${workspaceFolder}/build/install/include/assimp",
+                "${workspaceFolder}/build/install/include/stb",
             ],
             "defines": [],
             "macFrameworkPath": [
