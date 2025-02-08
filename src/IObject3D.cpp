@@ -15,6 +15,7 @@ CGL::IObject3D::IObject3D(const IObject3D &other) : CGL::IResourceID(other) {
 	this->scale = other.scale;
 	this->rotate = other.rotate;
 	this->translate = other.translate;
+	this->rotateQuat = other.rotateQuat;
 }
 
 CGL::IObject3D& CGL::IObject3D::operator=(const IObject3D &other) {
@@ -27,6 +28,7 @@ CGL::IObject3D& CGL::IObject3D::operator=(const IObject3D &other) {
 		this->scale = other.scale;
 		this->rotate = other.rotate;
 		this->translate = other.translate;
+		this->rotateQuat = other.rotateQuat;
 	}
     
 	return *this;
@@ -104,13 +106,15 @@ void CGL::IObject3D::addScale(glm::vec3 size) {
 }
 
 void CGL::IObject3D::setRotate(glm::vec3 axis, float angle) {
-	this->rotate = glm::rotate(glm::mat4(1), angle, axis);
+	this->rotateQuat = glm::angleAxis(angle, glm::normalize(axis));
+	this->rotate = glm::mat4_cast(this->rotateQuat);
 	this->model = this->translate * this->rotate * this->scale;
 }
 
 void CGL::IObject3D::addRotate(glm::vec3 axis, float angle) {
-	glm::mat4 rotateDelta = glm::rotate(glm::mat4(1), angle, axis);
-	this->rotate = rotateDelta * this->rotate;
+	glm::quat delatQuat = glm::angleAxis(angle, glm::normalize(axis));
+	this->rotateQuat = delatQuat * this->rotateQuat;
+	this->rotate = glm::mat4_cast(this->rotateQuat);
 	this->model = this->translate * this->rotate * this->scale;
 }
 

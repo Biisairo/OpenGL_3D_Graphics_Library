@@ -341,8 +341,10 @@ int main() {
 	CGL::Device& device = CGL::Device::getInstance();
 	device.init();
 	device.createWindow("Renderer", WIDTH, HEIGHT);
+	device.initDefaultOpenGLParameter();
+	device.initDefaultTextureParameter();
 	glfwSetWindowCloseCallback(device.window, windowCloseCallback);
-	device.setup();
+	device.setupFrameBuffer();
 
 	CGL::Scene scene;
 
@@ -355,7 +357,6 @@ int main() {
 	CGL::Mesh* cor = new CGL::Mesh();
 	CGL::IObject3D* openBox = getOpenBoxMesh();
 	CGL::Light* spotLight = new CGL::Light();
-	CGL::Light* directionLight = new CGL::Light();
 	CGL::PlayerCamera* camera = new CGL::PlayerCamera(glm::vec3(), glm::radians(180.f), 0, glm::radians(45.f), width, height);
 	{
 		{
@@ -397,28 +398,13 @@ int main() {
 		}
 		
 		{
-			directionLight->setLightType(CGL::LIGHT_DIRECTIONAL);
-			directionLight->setAmbientStrength(1);
-			directionLight->setDiffuseStrength(1);
-			directionLight->setSpecularStrength(1);
-			directionLight->setAmbientcolor(glm::vec3(0.3, 0.3, 0.3));
-			directionLight->setDiffusecolor(glm::vec3(0.5, 0.5, 0.5));
-			directionLight->setSpecularcolor(glm::vec3(1, 1, 1));
-			directionLight->setIntensity(0.5);
-			directionLight->setConstantAttenuation(0.01);
-			directionLight->setLinearAttenuation(0.01);
-			directionLight->setQuadraticAttenuation(0.01);
-			directionLight->setPosition(glm::vec3(4, 4, 4));
-			directionLight->setEmitDirection(glm::vec3(-1, -1, -1));
-			directionLight->setInnerCutoff(glm::radians(20.f));
-			directionLight->setOuterCutoff(glm::radians(45.f));
+			camera->setViewPosition(glm::vec3(0, 0, -10));
+			camera->setViewRotate(glm::vec3(1, 0, 0));
 		}
 	}
 
-	scene.addObject(cor);
 	scene.addObject(openBox);
 	scene.addObject(spotLight);
-	scene.addObject(directionLight);
 	scene.addObject(camera);
 	scene.setMainCamera(camera);
 
@@ -426,6 +412,9 @@ int main() {
 
 	bool moveMode = true;
 	bool escPressed = false;
+
+	bool coordPoint = false;
+	bool cPressed = false;
 
 	device.setMouseMode(CGL::MouseType::MOUSE_HIDDEN);
 	double before = glfwGetTime();
@@ -467,6 +456,35 @@ int main() {
 		} else if (glfwGetKey(device.window, GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
 			escPressed = false;
 		}
+		
+		if (glfwGetKey(device.window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+			if (!escPressed) {
+				moveMode = !moveMode;
+				if (moveMode) {
+					device.setMouseMode(CGL::MouseType::MOUSE_HIDDEN);
+					glfwSetCursorPos(device.window, width / 2, height / 2);
+				} else {
+					device.setMouseMode(CGL::MouseType::MOUSE_NORMAL);
+				}
+				escPressed = true;
+			}
+		} else if (glfwGetKey(device.window, GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
+			escPressed = false;
+		}
+		
+		if (glfwGetKey(device.window, GLFW_KEY_C) == GLFW_PRESS) {
+			if (!cPressed) {
+				coordPoint = !coordPoint;
+				if (coordPoint) {
+					scene.addObject(cor);
+				} else {
+					scene.removeObject(cor->getID());
+				}
+				cPressed = true;
+			}
+		} else if (glfwGetKey(device.window, GLFW_KEY_C) == GLFW_RELEASE) {
+			cPressed = false;
+		}
 
 		// loop end process
 		device.loopEndProcess();
@@ -475,7 +493,6 @@ int main() {
 	delete cor;
 	delete openBox;
 	delete spotLight;
-	delete directionLight;
 	delete camera;
 
 	for (int i = 0; i < meshes.size(); i++)

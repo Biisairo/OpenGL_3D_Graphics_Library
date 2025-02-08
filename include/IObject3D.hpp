@@ -26,6 +26,8 @@ namespace CGL {
 			glm::mat4 rotate;
 			glm::mat4 translate;
 
+			glm::quat rotateQuat;
+
 		public:
 			std::string memo = "";
 

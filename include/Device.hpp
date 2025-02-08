@@ -17,31 +17,31 @@
 #include "Light.hpp"
 #include "ICamera.hpp"
 
-#define SHADER_PATH "../src/shader/"
-
-// #define COMMON_SHADER_VERT "vs/test.vert"
-// #define COMMON_SHADER_FRAG "fs/test.frag"
-#define COMMON_SHADER_VERT "vs/CameraNormal.vert"
-#define COMMON_SHADER_FRAG "fs/CameraNormal.frag"
-
-#define SHADOW_SHADER_VERT "vs/Shadow.vert"
-#define SHADOW_SHADER_FRAG "fs/Shadow.frag"
-
-#define DEFAULT_SHADER_VERT "vs/default.vert"
-#define DEFAULT_SHADER_FRAG "fs/default.frag"
-
-#define NORMAL_CHECK_SHADER_VERT "vs/checkNormal.vert"
-#define NORMAL_CHECK_SHADER_GEO "gs/checkNormal.geom"
-#define NORMAL_CHECK_SHADER_FRAG "fs/checkNormal.frag"
-
-#define SHADOW_TEST_VERT "vs/ShadowTest.vert"
-#define SHADOW_TEST_FRAG "fs/ShadowTest.frag"
-
 #define MAX_LIGHT_COUNT 10
 
 using programHash = size_t;
 
 namespace CGL {
+
+	namespace SHADER_FILE {
+		constexpr const char* SHADER_PATH = "../src/shader/";
+
+		constexpr const char* COMMON_SHADER_VERT = "vs/CameraNormal.vert";
+		constexpr const char* COMMON_SHADER_FRAG = "fs/CameraNormal.frag";
+
+		constexpr const char* SHADOW_SHADER_VERT = "vs/Shadow.vert";
+		constexpr const char* SHADOW_SHADER_FRAG = "fs/Shadow.frag";
+
+		constexpr const char* DEFAULT_SHADER_VERT = "vs/default.vert";
+		constexpr const char* DEFAULT_SHADER_FRAG = "fs/default.frag";
+
+		constexpr const char* NORMAL_CHECK_SHADER_VERT = "vs/checkNormal.vert";
+		constexpr const char* NORMAL_CHECK_SHADER_GEO = "gs/checkNormal.geom";
+		constexpr const char* NORMAL_CHECK_SHADER_FRAG = "fs/checkNormal.frag";
+
+		constexpr const char* SHADOW_TEST_VERT = "vs/ShadowTest.vert";
+		constexpr const char* SHADOW_TEST_FRAG = "fs/ShadowTest.frag";
+	}
 
 	// enum
 	enum MouseType {
@@ -111,9 +111,6 @@ namespace CGL {
 		glm::vec4 emitDirection;
 		float innerCutoff;
 		float outerCutoff;
-		
-		// padding
-		float padding[2]{0, 0};
 	};
 
 	struct LightBuffers {
@@ -128,7 +125,7 @@ namespace CGL {
 
 	class Device {
 		public:
-			GLFWwindow* window;
+			GLFWwindow* window = nullptr;
 		private:
 			
 			std::unordered_map<objectID, MeshBuffer> meshes;
@@ -152,7 +149,9 @@ namespace CGL {
 			static Device& getInstance();
 			void init();
 			void createWindow(std::string const &title, int width, int height);
-			void setup();
+			void initDefaultOpenGLParameter();
+			void initDefaultTextureParameter();
+			void setupFrameBuffer();
 
 			void loopBeginProcess();
 			void loopEndProcess();

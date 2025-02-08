@@ -19,6 +19,6 @@ CGL::LightFramebuffer::LightFramebuffer(GLsizei width, GLsizei height) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->texture, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
-	
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

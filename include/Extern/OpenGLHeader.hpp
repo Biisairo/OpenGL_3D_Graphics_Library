@@ -3,7 +3,7 @@
 
 #define GL_SILENCE_DEPRECATION
 #define GLFW_INCLUDE_NONE
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <glad.h>
+#include <glfw3.h>
 
 #endif

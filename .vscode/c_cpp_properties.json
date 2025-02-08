@@ -4,7 +4,12 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/include",
-                "${workspaceFolder}/build/install/include"
+                "${workspaceFolder}/build/install/include",
+                "${workspaceFolder}/build/install/include/glad",
+                "${workspaceFolder}/build/install/include/GLFW",
+                "${workspaceFolder}/build/install/include/glm",
+                "${workspaceFolder}/build/install/include/imgui",
+                "${workspaceFolder}/build/install/include/KHR",
             ],
             "defines": [],
             "macFrameworkPath": [

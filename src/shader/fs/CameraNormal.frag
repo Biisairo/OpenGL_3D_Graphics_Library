@@ -50,17 +50,19 @@ out vec4 FragColor;
 
 float calculateShadow(int index) {
     vec4 FragPosLightSpace = LIGHT[index].projection * LIGHT[index].view * vec4(fs_in.FragPos, 1);
-    vec3 lightPos = vec3(LIGHT[index].position);
+    vec3 lightDir = normalize(vec3(LIGHT[index].position) - fs_in.FragPos);
 
-	float bias = max(0.05 * (1.0 - dot(fs_in.Normal, lightPos)), 0.005); 
 	vec3 projCoords = FragPosLightSpace.xyz / FragPosLightSpace.w;
 	projCoords = projCoords * 0.5 + 0.5;
 	float closestDepth = texture(shadowMap[index], projCoords.xy).r;
 	float currentDepth = projCoords.z;
-	float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
 	
     if(projCoords.z > 1.0)
-        return shadow;
+        return 0.0;
+	
+	float bias = max(0.05 * (1.0 - dot(normalize(fs_in.Normal), lightDir)), 0.005);
+	// float bias = 0;
+    float shadow = 0.0;
 
 	vec2 texelSize = 1.0 / textureSize(shadowMap[index], 0);
 	for(int x = -1; x <= 1; ++x)
@@ -68,15 +70,16 @@ float calculateShadow(int index) {
 		for(int y = -1; y <= 1; ++y)
 		{
 			float pcfDepth = texture(shadowMap[index], projCoords.xy + vec2(x, y) * texelSize).r; 
-			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
 		}    
 	}
-	shadow /= 9.0;
+	shadow /= 9;
 
 	return shadow;
 }
 
-vec4 computeLight(Light light, TangentSpace tangentSpace) {
+vec4 computeLight(int index, TangentSpace tangentSpace) {
+    Light light = LIGHT[index];
     vec4 lightColor = vec4(0.0);
 
     // 빛 방향 및 거리 계산
@@ -105,7 +108,7 @@ vec4 computeLight(Light light, TangentSpace tangentSpace) {
         float outerCutoff = cos(light.outerCutoff);
 
         // 거리 감쇠
-        attenuation;
+        attenuation = 0;
 
         if (spotEffect < outerCutoff) { // 스포트라이트 범위 밖에 있는 경우
 
@@ -126,6 +129,9 @@ vec4 computeLight(Light light, TangentSpace tangentSpace) {
         
         }
 
+        float minLightAttenuation = 0.0;
+
+        attenuation = (attenuation * (1 - minLightAttenuation)) + minLightAttenuation;
     }
 
     // Phong 모델을 사용한 조명 계산
@@ -142,7 +148,15 @@ vec4 computeLight(Light light, TangentSpace tangentSpace) {
         spec * light.specularStrength * light.specularcolor * SPECULARCOLOR
     );
 
-    return lightColor; // 최종 조명 색상 반환
+    float shadow = 0.0;
+
+    #if defined(USE_NORMAL)
+    if (IS_RENDER_SHADOW) {
+        shadow = calculateShadow(index);
+    }
+    #endif
+
+    return lightColor * (1 - shadow);
 }
 
 vec2 parallaxOcclusionMapping(vec2 texCoords, vec3 viewDir)
@@ -205,10 +219,8 @@ void main(){
         mat3 normalMatrix = transpose(mat3(tangentSpace.TBN));
         vec3 normal = normalize(normalMatrix * fs_in.Normal);
         #if defined(USE_NORMAL_MAP)
-            // obtain normal from normal map in range [0,1]
             normal = texture(normalMap, texCoord).rgb;
-            // transform normal vector to range [-1,1]
-            normal = normalize(normal * 2.0 - 1.0);  // this normal is in tangent space
+            normal = normalize(normal * 2.0 - 1.0);
         #endif
 
         tangentSpace.normal = normal;
@@ -229,22 +241,11 @@ void main(){
     if (LIGHT_COUNT > 0) {
         lightColorSum = vec4(0.0);
         for (int i = 0; i < LIGHT_COUNT; i++) {
-            vec4 lightColor = computeLight(LIGHT[i], tangentSpace);
+            vec4 lightColor = computeLight(i, tangentSpace);
             lightColorSum += lightColor;
         }
     }
     #endif
 
-    float shadow = 0.0;
-
-    #if defined(USE_NORMAL)
-    if (IS_RENDER_SHADOW) {
-        for (int i = 0; i < LIGHT_COUNT; i++) {
-            shadow += calculateShadow(i);
-        }
-        shadow /= LIGHT_COUNT;
-    }
-    #endif
-
-    FragColor = vec4(fragColor * lightColorSum.xyz * (1 - shadow), ALPHA);
+    FragColor = vec4(fragColor * lightColorSum.xyz, ALPHA);
 }

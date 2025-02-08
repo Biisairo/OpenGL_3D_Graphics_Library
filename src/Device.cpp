@@ -25,6 +25,9 @@ void CGL::Device::init() {
 }
 
 void CGL::Device::createWindow(std::string const &title, int width, int height) {
+	if (this->window != nullptr)
+		return;
+
 	this->window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
 	if (!this->window) {
 		glfwTerminate();
@@ -32,7 +35,9 @@ void CGL::Device::createWindow(std::string const &title, int width, int height) 
 	}
 
 	glfwMakeContextCurrent(window);
+}
 
+void CGL::Device::initDefaultOpenGLParameter() {
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         return;
     }
@@ -40,8 +45,9 @@ void CGL::Device::createWindow(std::string const &title, int width, int height) 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
-	// glDisable(GL_CULL_FACE);
+}
 
+void CGL::Device::initDefaultTextureParameter() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
@@ -49,12 +55,12 @@ void CGL::Device::createWindow(std::string const &title, int width, int height) 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
-void CGL::Device::setup() {
+void CGL::Device::setupFrameBuffer() {
 	int width, height;
 	glfwGetFramebufferSize(this->window, &width, &height);
 	
 	for (int i = 0; i < MAX_LIGHT_COUNT; i++) {
-		this->framebufferManager.addLightFramebuffer("shadowMap[" + std::to_string(i) + "]", 1024, 1024);
+		this->framebufferManager.addLightFramebuffer("shadowMap[" + std::to_string(i) + "]", 4096, 4096);
 	}
 
 	this->framebufferManager.addFramebuffer("default", width, height);
@@ -177,7 +183,14 @@ void CGL::Device::render(CGL::Scene* scene) {
 		// return;
 
 		this->framebufferManager.useFramebuffer("shadowMap[" + std::to_string(i) + "]");
-		glViewport(0, 0, 1024, 1024);
+
+		GLint shadowWidth, shadowHeight;
+		glBindTexture(GL_TEXTURE_2D, this->framebufferManager.getTexture("shadowMap[" + std::to_string(i) + "]"));
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &shadowWidth);
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &shadowHeight);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glViewport(0, 0, shadowWidth, shadowHeight);
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_DEPTH_BUFFER_BIT);	
 		{
@@ -186,15 +199,29 @@ void CGL::Device::render(CGL::Scene* scene) {
 			this->drawShadows(meshes);
 		}
 		this->framebufferManager.useDefaultFramebuffer();
+		
+	}
 
-		// glViewport(0, 0, width, height);
-		// glEnable(GL_DEPTH_TEST);
-		// glClearColor(0.1, 0.7, 0.8, 1);
-		// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	{
+		static int shadowMapNum = -1;
+		for (int tmp = 0; tmp < 10; tmp++) {
+			if (glfwGetKey(this->window, GLFW_KEY_0 + tmp) == GLFW_PRESS) {
+				shadowMapNum = tmp;
+			}
+		}
+		if (glfwGetKey(this->window, GLFW_KEY_GRAVE_ACCENT) == GLFW_PRESS) {
+			shadowMapNum = -1;
+		}
+		if (shadowMapNum != -1) {
+			glViewport(0, 0, 1024, 1024);
+			glEnable(GL_DEPTH_TEST);
+			glClearColor(0.1, 0.7, 0.8, 1);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// this->drawShadowBuffer("shadowMap[" + std::to_string(i) + "]", false);
+			this->drawShadowBuffer("shadowMap[" + std::to_string(shadowMapNum) + "]", false);
 
-		// return;
+			return;
+		}
 	}
 
 	// render mesh
@@ -372,29 +399,24 @@ CGL::LightBuffers CGL::Device::trimLights(std::vector<CGL::Light*>& lights) {
 }
 
 void CGL::Device::registerLights(CGL::LightBuffers& lightBuffers) {
-this->getError();
 	this->useUniformBlock("Lights");
-this->getError();
+
 	programHash program;
 	{
 		std::unordered_map<ShaderType, std::string> shader;
-		shader.insert(std::make_pair(VERTEX_SHADER, SHADOW_SHADER_VERT));
-		shader.insert(std::make_pair(FRAGMENT_SHADER, SHADOW_SHADER_FRAG));
+		shader.insert(std::make_pair(VERTEX_SHADER, CGL::SHADER_FILE::SHADOW_SHADER_VERT));
+		shader.insert(std::make_pair(FRAGMENT_SHADER, CGL::SHADER_FILE::SHADOW_SHADER_FRAG));
 		std::set<std::string> define;
 		program = this->getProgram(shader, define);
 	}
-this->getError();
+
 	GLuint index =this->getBindingIndex("Lights");
-this->getError();
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(uint) * 4 + sizeof(CGL::LightBuffer) * lightBuffers.lightCount, NULL, GL_STATIC_DRAW);
-this->getError();
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(uint) * 4 + sizeof(CGL::LightBuffer) * lightBuffers.lightCount, NULL, GL_DYNAMIC_DRAW);
 	glBindBufferRange(GL_UNIFORM_BUFFER, index, this->getUniformBlockBuffer("Lights"), 0, sizeof(uint) * 4 + sizeof(CGL::LightBuffer) * lightBuffers.lightCount);
-this->getError();
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(uint), &(lightBuffers.lightCount));
-this->getError();
 	if (lightBuffers.lightCount != 0)
 		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(uint) * 4, sizeof(CGL::LightBuffer) * lightBuffers.lightCount, lightBuffers.light.data());
-this->getError();
+
 	this->unuseUniformBlock();
 
 	this->getError();
@@ -405,7 +427,7 @@ void CGL::Device::registerLightView(CGL::LightBuffer& lightBuffer) {
 
 	GLuint index =this->getBindingIndex("Matrices");
 
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2 + sizeof(glm::vec4), NULL, GL_STATIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2 + sizeof(glm::vec4), NULL, GL_DYNAMIC_DRAW);
 
 	glBindBufferRange(GL_UNIFORM_BUFFER, index, this->getUniformBlockBuffer("Matrices"), 0, sizeof(glm::mat4) * 2 + sizeof(glm::vec4));
 
@@ -419,17 +441,20 @@ void CGL::Device::registerLightView(CGL::LightBuffer& lightBuffer) {
 }
 
 void CGL::Device::drawShadows(std::vector<CGL::Mesh*>& meshes) {
-	GLboolean wasFaceCullEnabled = glIsEnabled(GL_CULL_FACE);
-	glDisable(GL_CULL_FACE);
+	// GLboolean wasFaceCullEnabled = glIsEnabled(GL_CULL_FACE);
+	// glDisable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
 
 	for (std::vector<CGL::Mesh*>::iterator it = meshes.begin(); it != meshes.end(); it++) {
 		this->drawShadow((*it)->getID(), (*it)->getModel());
 	}
-	if (wasFaceCullEnabled) {
-		glEnable(GL_CULL_FACE);
-	} else {
-		glDisable(GL_CULL_FACE);
-	}
+
+	glCullFace(GL_BACK);
+	// if (wasFaceCullEnabled) {
+	// 	glEnable(GL_CULL_FACE);
+	// } else {
+	// 	glDisable(GL_CULL_FACE);
+	// }
 }
 
 void CGL::Device::registerCamera(CGL::ICamera* camera) {
@@ -444,7 +469,7 @@ void CGL::Device::registerCamera(CGL::ICamera* camera) {
 
 	GLuint index =this->getBindingIndex("Matrices");
 
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2 + sizeof(glm::vec4), NULL, GL_STATIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2 + sizeof(glm::vec4), NULL, GL_DYNAMIC_DRAW);
 
 	glBindBufferRange(GL_UNIFORM_BUFFER, index, this->getUniformBlockBuffer("Matrices"), 0, sizeof(glm::mat4) * 2 + sizeof(glm::vec4));
 
@@ -529,8 +554,8 @@ void CGL::Device::drawShadow(objectID ID, glm::mat4 model) {
 		programHash program;
 		{
 			std::unordered_map<ShaderType, std::string> shader;
-			shader.insert(std::make_pair(VERTEX_SHADER, SHADOW_SHADER_VERT));
-			shader.insert(std::make_pair(FRAGMENT_SHADER, SHADOW_SHADER_FRAG));
+			shader.insert(std::make_pair(VERTEX_SHADER, CGL::SHADER_FILE::SHADOW_SHADER_VERT));
+			shader.insert(std::make_pair(FRAGMENT_SHADER, CGL::SHADER_FILE::SHADOW_SHADER_FRAG));
 			std::set<std::string> define;
 			program = this->getProgram(shader, define);
 		}
@@ -558,9 +583,9 @@ void CGL::Device::drawNormal(objectID ID, glm::mat4 model) {
 		programHash program;
 		{
 			std::unordered_map<ShaderType, std::string> shader;
-			shader.insert(std::make_pair(VERTEX_SHADER, NORMAL_CHECK_SHADER_VERT));
-			shader.insert(std::make_pair(GEOMETRY_SHADER, NORMAL_CHECK_SHADER_GEO));
-			shader.insert(std::make_pair(FRAGMENT_SHADER, NORMAL_CHECK_SHADER_FRAG));
+			shader.insert(std::make_pair(VERTEX_SHADER, CGL::SHADER_FILE::NORMAL_CHECK_SHADER_VERT));
+			shader.insert(std::make_pair(GEOMETRY_SHADER, CGL::SHADER_FILE::NORMAL_CHECK_SHADER_GEO));
+			shader.insert(std::make_pair(FRAGMENT_SHADER, CGL::SHADER_FILE::NORMAL_CHECK_SHADER_FRAG));
 			std::set<std::string> define;
 			program = this->getProgram(shader, define);
 		}
@@ -591,8 +616,8 @@ void CGL::Device::drawFrameBuffer(std::string frameBufferName) {
 	programHash program;
 	{
 		std::unordered_map<ShaderType, std::string> shader;
-		shader.insert(std::make_pair(VERTEX_SHADER, DEFAULT_SHADER_VERT));
-		shader.insert(std::make_pair(FRAGMENT_SHADER, DEFAULT_SHADER_FRAG));
+		shader.insert(std::make_pair(VERTEX_SHADER, CGL::SHADER_FILE::DEFAULT_SHADER_VERT));
+		shader.insert(std::make_pair(FRAGMENT_SHADER, CGL::SHADER_FILE::DEFAULT_SHADER_FRAG));
 		std::set<std::string> define;
 		program = this->getProgram(shader, define);
 	}
@@ -617,8 +642,8 @@ void CGL::Device::drawShadowBuffer(std::string frameBufferName, bool isPerspecti
 	programHash program;
 	{
 		std::unordered_map<ShaderType, std::string> shader;
-		shader.insert(std::make_pair(VERTEX_SHADER, SHADOW_TEST_VERT));
-		shader.insert(std::make_pair(FRAGMENT_SHADER, SHADOW_TEST_FRAG));
+		shader.insert(std::make_pair(VERTEX_SHADER, CGL::SHADER_FILE::SHADOW_TEST_VERT));
+		shader.insert(std::make_pair(FRAGMENT_SHADER, CGL::SHADER_FILE::SHADOW_TEST_FRAG));
 		std::set<std::string> define;
 		program = this->getProgram(shader, define);
 	}
@@ -746,8 +771,8 @@ void CGL::Device::updateMesh(
 	glBindVertexArray(0);
 
 	std::unordered_map<ShaderType, std::string> shader;
-	shader.insert(std::make_pair(VERTEX_SHADER, COMMON_SHADER_VERT));
-	shader.insert(std::make_pair(FRAGMENT_SHADER, COMMON_SHADER_FRAG));
+	shader.insert(std::make_pair(VERTEX_SHADER, CGL::SHADER_FILE::COMMON_SHADER_VERT));
+	shader.insert(std::make_pair(FRAGMENT_SHADER, CGL::SHADER_FILE::COMMON_SHADER_FRAG));
 
 	std::set<std::string> define;
 	if (normal.size())
@@ -1095,7 +1120,7 @@ static void CGL::error_callback(int error, const char *des) {
 // Shader loader //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static std::string CGL::loadShaderCode(std::string const &fileName) {
-	std::string filePath = SHADER_PATH + fileName;
+	std::string filePath = CGL::SHADER_FILE::SHADER_PATH + fileName;
     std::ifstream file(filePath);
     if (!file.is_open()) {
         std::cerr << "Failed to open shader file: " << filePath << std::endl;
