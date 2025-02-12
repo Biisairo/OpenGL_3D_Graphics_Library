@@ -216,8 +216,7 @@ void main(){
             texCoord = parallaxMapping(viewDir, fs_in.TexCoords);
         #endif
 
-        mat3 normalMatrix = transpose(mat3(tangentSpace.TBN));
-        vec3 normal = normalize(normalMatrix * fs_in.Normal);
+        vec3 normal = normalize(fs_in.Normal);
         #if defined(USE_NORMAL_MAP)
             normal = texture(normalMap, texCoord).rgb;
             normal = normalize(normal * 2.0 - 1.0);
